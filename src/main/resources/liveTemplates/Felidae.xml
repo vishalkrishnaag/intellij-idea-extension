@@ -62,7 +62,7 @@
         </context>
     </template>
 
-    <template name="factall" value="$ROWS$ := Fact.all(type: &quot;$TYPENAME$&quot;)" description="Read every currently loaded fact of a type from the in-memory fact store" toReformat="false" toShortenFQNames="false">
+    <template name="factall" value="$ROWS$ := $TYPENAME$.all()" description="Read every currently loaded fact assignable to a fact type" toReformat="false" toShortenFQNames="false">
         <variable name="ROWS" expression="" defaultValue="&quot;rows&quot;" alwaysStopAt="true"/>
         <variable name="TYPENAME" expression="" defaultValue="&quot;TypeName&quot;" alwaysStopAt="true"/>
         <context>
@@ -70,7 +70,7 @@
         </context>
     </template>
 
-    <template name="factfind" value="$ROWS$ := Fact.find(type: &quot;$TYPENAME$&quot;, field: &quot;$FIELD$&quot;, equals: $VALUE$)" description="Read facts of a type whose field equals a value from the in-memory fact store" toReformat="false" toShortenFQNames="false">
+    <template name="factfind" value="$ROWS$ := $TYPENAME$.where($FIELD$: $VALUE$)" description="Read facts of a type whose named field equals a value" toReformat="false" toShortenFQNames="false">
         <variable name="ROWS" expression="" defaultValue="&quot;rows&quot;" alwaysStopAt="true"/>
         <variable name="TYPENAME" expression="" defaultValue="&quot;TypeName&quot;" alwaysStopAt="true"/>
         <variable name="FIELD" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
@@ -80,12 +80,4 @@
         </context>
     </template>
 
-    <template name="probfn" value="$RESULT$ := probability.$FN$(data: $VALUES$)" description="Call a native Felidae probability/statistics function" toReformat="false" toShortenFQNames="false">
-        <variable name="RESULT" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
-        <variable name="FN" expression="" defaultValue="&quot;mean&quot;" alwaysStopAt="true"/>
-        <variable name="VALUES" expression="" defaultValue="&quot;values&quot;" alwaysStopAt="true"/>
-        <context>
-            <option name="OTHER" value="true"/>
-        </context>
-    </template>
 </templateSet>

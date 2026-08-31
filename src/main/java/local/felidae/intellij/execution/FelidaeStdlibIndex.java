@@ -37,7 +37,7 @@ public final class FelidaeStdlibIndex {
             "array", "comparison", "console", "csv", "db", "exception", "fact",
             "fact_analysis", "file", "flibrary", "group", "gtk", "http", "json",
             "list", "logic", "math", "ml", "package", "plot", "prelude",
-            "probability", "process", "qt", "set", "smoke", "str", "system",
+            "process", "qt", "set", "smoke", "str", "system",
             "thread", "wordnet"
     );
 

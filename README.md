@@ -11,7 +11,7 @@ felidae_debug AST analysis for diagnostics and Celidae for fact graph inspection
 - Celidae visual analytics action using `celidae --inspect-graph`
 - Brace matching for `()`, `{}`, and `[]`
 - File type, action, and tool-window icons
-- Live templates for `main`, facts, methods, fallback rules, lambdas, `throw`, `Fact.*` queries, and `probability.*` calls
+- Live templates for `main`, facts, methods, fallback rules, lambdas, `throw`, and fact queries
 - Quick Documentation (Ctrl+Q) for stdlib calls, backed by the same content the VS Code extension shows
 - Completion for stdlib module calls and in-scope facts/methods/globals/bindings
 - A gutter icon above `main(...)` to run (click) or check/visualize (right-click)
