@@ -32,6 +32,8 @@ public final class FelidaeCompletionContributor extends CompletionContributor {
     private static final Pattern DOT_TRIGGER = Pattern.compile("([A-Za-z_][A-Za-z0-9_]*)\\.$");
     private static final Pattern BINDING = Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_]*)\\s*:=");
     private static final Pattern TRAILING_IDENTIFIER = Pattern.compile("([A-Za-z_][A-Za-z0-9_]*)$");
+    private static final Pattern CLASS_DECLARATION =
+            Pattern.compile("(?m)^class\\s+([A-Za-z_][A-Za-z0-9_]*)\\b");
     private static final Pattern LAMBDA_ITEM =
             Pattern.compile("\\blambda\\s*\\([^,]+,\\s*([a-z_][A-Za-z0-9_]*)\\s*=>");
 
@@ -196,6 +198,13 @@ public final class FelidaeCompletionContributor extends CompletionContributor {
                         LookupElementBuilder.create(param.name()).withTypeText("parameter"));
                 kinds.putIfAbsent(param.name(), FelidaeMlRanking.CandidateKind.PARAM);
             }
+        }
+
+        Matcher classDeclaration = CLASS_DECLARATION.matcher(text);
+        while (classDeclaration.find()) {
+            String name = classDeclaration.group(1);
+            items.putIfAbsent(name, LookupElementBuilder.create(name).withTypeText("class"));
+            kinds.putIfAbsent(name, FelidaeMlRanking.CandidateKind.FACT);
         }
 
         for (String library : FelidaeStdlibIndex.getLibraries()) {

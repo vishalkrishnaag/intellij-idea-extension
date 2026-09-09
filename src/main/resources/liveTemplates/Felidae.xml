@@ -28,6 +28,22 @@
         </context>
     </template>
 
+    <template name="methodend" value="$NAME$($INPUT$: $TYPE$) =&gt;&#10;    $ITEM$ := $INPUT$&#10;    return ($RESULTNAME$: $ITEM$)&#10;end" description="Create a method with an explicit end boundary" toReformat="false" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;methodName&quot;" alwaysStopAt="true"/>
+        <variable name="INPUT" expression="" defaultValue="&quot;input&quot;" alwaysStopAt="true"/>
+        <variable name="TYPE" expression="" defaultValue="&quot;Type&quot;" alwaysStopAt="true"/>
+        <variable name="ITEM" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <variable name="RESULTNAME" expression="" defaultValue="&quot;result&quot;" alwaysStopAt="true"/>
+        <context><option name="OTHER" value="true"/></context>
+    </template>
+
+    <template name="class" value="class $NAME$&#10;    $FIELD$: $TYPE$&#10;end" description="Create a class with an explicit end boundary" toReformat="false" toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="&quot;TypeName&quot;" alwaysStopAt="true"/>
+        <variable name="FIELD" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
+        <variable name="TYPE" expression="" defaultValue="&quot;string&quot;" alwaysStopAt="true"/>
+        <context><option name="OTHER" value="true"/></context>
+    </template>
+
     <template name="fallback" value="$NAME$($INPUT$: $TYPE$) =&gt;&#10;    $ITEM$ := $INPUT$&#10;    $ITEM$.$FIELD$ == &quot;$MATCHVALUE$&quot;&#10;    return (&#10;        $RESULTNAME$: $ITEM$.$RESULTFIELD$,&#10;        $STATUSNAME$: &quot;$STATUSVALUE$&quot;&#10;    )&#10;else&#10;    return (&#10;        $RESULTNAME$: $ITEM$.$RESULTFIELD$,&#10;        $STATUSNAME$: &quot;$DEFAULTVALUE$&quot;&#10;    )" description="Create an ordered fallback method-style rule" toReformat="false" toShortenFQNames="false">
         <variable name="NAME" expression="" defaultValue="&quot;RoleAccess&quot;" alwaysStopAt="true"/>
         <variable name="INPUT" expression="" defaultValue="&quot;input&quot;" alwaysStopAt="true"/>

@@ -93,7 +93,7 @@ public final class FelidaeGotoDeclarationHandler implements GotoDeclarationHandl
 
     /** Language keywords are never declarations; navigating from one is noise. */
     private static final Set<String> KEYWORDS = Set.of(
-            "import", "extend", "where", "if", "then", "else", "return", "lambda",
+            "import", "class", "extend", "where", "if", "then", "else", "end", "return", "lambda",
             "true", "false", "nil");
 
     private static @Nullable String resolveName(@NotNull CharSequence text, int offset) {

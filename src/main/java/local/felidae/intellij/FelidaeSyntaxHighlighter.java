@@ -276,6 +276,7 @@ public final class FelidaeSyntaxHighlighter
 
         private static final Set<String> KEYWORDS = Set.of(
                 "import",
+                "class",
                 "extend",
                 "where",
                 "if",
@@ -283,6 +284,7 @@ public final class FelidaeSyntaxHighlighter
                 "return",
                 "lambda",
                 "then",
+                "end",
                 "true",
                 "false",
                 "nil"

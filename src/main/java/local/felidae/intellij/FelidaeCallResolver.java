@@ -84,9 +84,9 @@ public final class FelidaeCallResolver {
             qualified.append(Pattern.quote(parts[i]));
         }
         return Pattern.compile(
-                "(?m)^[ \\t]*" + qualified
-                        + "(?:\\s+extend\\s+[A-Za-z_][A-Za-z0-9_]*)?"
-                        + "\\s*\\(");
+                "(?m)^(?:" + qualified
+                        + "(?:\\s+extend\\s+[A-Za-z_][A-Za-z0-9_]*)?\\s*\\("
+                        + "|class\\s+" + qualified + "\\b)");
     }
 
     /** One top-level declaration found in a file's text. */

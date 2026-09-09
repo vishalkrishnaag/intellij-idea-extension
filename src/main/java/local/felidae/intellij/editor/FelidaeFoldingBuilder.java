@@ -67,9 +67,43 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
         if (node == null) return FoldingDescriptor.EMPTY_ARRAY;
 
         addDeclarationFolds(text, lines, lineStart, document, node, descriptors);
+        addExplicitEndFolds(lines, lineStart, document, node, descriptors);
         addCommentFolds(lines, lineStart, document, node, descriptors);
 
         return descriptors.toArray(FoldingDescriptor.EMPTY_ARRAY);
+    }
+
+    /**
+     * `end` is the authoritative close for class declarations and explicit
+     * method blocks. Pair it with the nearest still-open header so nested
+     * methods fold independently instead of extending to the next declaration.
+     */
+    private static void addExplicitEndFolds(
+            String[] lines,
+            int[] lineStart,
+            Document document,
+            ASTNode node,
+            List<FoldingDescriptor> descriptors
+    ) {
+        Pattern opener = Pattern.compile(
+                "^\\s*(?:class\\s+[A-Za-z_][A-Za-z0-9_]*(?:\\s+extend\\b.*)?"
+                        + "|[A-Za-z_][A-Za-z0-9_:.]*\\s*\\([^)]*\\)\\s*=>\\s*(?:#.*)?)$");
+        Pattern closer = Pattern.compile("^\\s*end\\.?\\s*(?:#.*)?$");
+        List<Integer> starts = new ArrayList<>();
+        for (int line = 0; line < lines.length; line++) {
+            if (opener.matcher(lines[line]).matches()) {
+                starts.add(line);
+            } else if (closer.matcher(lines[line]).matches() && !starts.isEmpty()) {
+                int start = starts.remove(starts.size() - 1);
+                if (line <= start) continue;
+                int startOffset = lineStart[start] + lines[start].length();
+                int endOffset = Math.min(document.getTextLength(), lineStart[line] + lines[line].length());
+                if (endOffset > startOffset) {
+                    descriptors.add(new FoldingDescriptor(
+                            node, new TextRange(startOffset, endOffset), null, " ..."));
+                }
+            }
+        }
     }
 
     private static void addDeclarationFolds(
@@ -87,11 +121,16 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
             // The region runs to the last non-blank line before the next
             // top-level construct, so trailing blank separators stay visible.
             int end = headLine;
+            boolean hasExplicitEnd = false;
             for (int i = headLine + 1; i < lines.length; i++) {
                 if (TOP_LEVEL_START.matcher(lines[i]).find()) break;
+                if (lines[i].matches("^\\s*end\\.?\\s*(?:#.*)?$")) {
+                    hasExplicitEnd = true;
+                    break;
+                }
                 if (!lines[i].isBlank()) end = i;
             }
-            if (end <= headLine) continue; // single-line declaration: nothing to fold
+            if (hasExplicitEnd || end <= headLine) continue;
 
             int startOffset = lineStart[headLine] + lines[headLine].length();
             int endOffset = Math.min(document.getTextLength(), lineStart[end] + lines[end].length());
