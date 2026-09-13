@@ -22,6 +22,31 @@ import java.util.List;
 
 public final class FelidaeProcessRunner {
 
+    /** Shell launch for user programs; tooling keeps its direct stdio protocol. */
+    public static GeneralCommandLine shellCommand(Path executable, List<String> arguments) {
+        GeneralCommandLine command = new GeneralCommandLine();
+        command.setCharset(StandardCharsets.UTF_8);
+        if (com.intellij.openapi.util.SystemInfo.isWindows) {
+            command.setExePath(System.getenv().getOrDefault("ComSpec", "cmd.exe"));
+            command.addParameters("/d", "/v:on", "/s", "/c");
+            command.withEnvironment("FELIDAE_RUN_EXE", executable.toString());
+            StringBuilder invocation = new StringBuilder("\"!FELIDAE_RUN_EXE!\"");
+            for (int index = 0; index < arguments.size(); ++index) {
+                String key = "FELIDAE_RUN_ARG_" + index;
+                String value = arguments.get(index).replaceAll("(\\\\*)\"", "$1$1\\\\\"")
+                        .replaceAll("(\\\\+)$", "$1$1");
+                command.withEnvironment(key, value);
+                invocation.append(" \"!").append(key).append("!\"");
+            }
+            command.addParameter("\"" + invocation + "\"");
+        } else {
+            command.setExePath("/bin/sh");
+            command.addParameters("-c", "exec \"$@\"", "felidae-run", executable.toString());
+            command.addParameters(arguments);
+        }
+        return command;
+    }
+
     private FelidaeProcessRunner() {
         throw new AssertionError(
                 "FelidaeProcessRunner cannot be instantiated."
@@ -144,11 +169,10 @@ public final class FelidaeProcessRunner {
             @NotNull ProgressIndicator indicator,
             @NotNull FelidaeConsoleService consoleService
     ) {
-        GeneralCommandLine commandLine =
-                new GeneralCommandLine();
-
-        commandLine.setExePath(executable.toString());
-        commandLine.setCharset(StandardCharsets.UTF_8);
+        java.util.ArrayList<String> arguments = new java.util.ArrayList<>();
+        arguments.add(sourceFile.toString());
+        arguments.addAll(trailingArguments);
+        GeneralCommandLine commandLine = shellCommand(executable, arguments);
 
         Path workingDirectory = sourceFile.getParent();
 
@@ -162,11 +186,9 @@ public final class FelidaeProcessRunner {
          * Interpreter:
          *   felidae.exe file.fx
          *
-         * Felidae AST debugger:
-         *   felidae_debug.exe file.fx --check-json
+         * Felidae tooling mode:
+         *   felidae.exe file.fx --check-json
          */
-        commandLine.addParameter(sourceFile.toString());
-        commandLine.addParameters(trailingArguments);
 
         ApplicationManager.getApplication().invokeLater(() -> {
             consoleService.printSystem(

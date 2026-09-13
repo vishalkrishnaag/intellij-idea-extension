@@ -31,7 +31,7 @@ public final class FelidaeBuiltinDocs {
 
     /**
      * One named argument a builtin accepts. {@code type} is empty for
-     * builtins, whose documented examples carry names only; felidae_debug
+     * builtins, whose documented examples carry names only; felidae
      * supplies real types for user-defined declarations instead.
      */
     public record Param(@NotNull String name, @NotNull String type) {

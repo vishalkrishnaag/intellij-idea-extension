@@ -13,11 +13,11 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 /**
- * Persists the per-project felidae/felidae_debug/celidae executable path
+ * Persists the per-project felidae/celidae executable path
  * overrides configured on the Felidae settings page. Checked first by
  * FelidaeExecutableResolver, ahead of environment variables and
  * auto-detection, mirroring the VS Code extension's
- * felidae.interpreterPath/debugInterpreterPath/celidaePath settings.
+ * felidae.interpreterPath/celidaePath settings.
  */
 @Service(Service.Level.PROJECT)
 @State(name = "FelidaeSettings", storages = @Storage("felidae.xml"))
@@ -25,11 +25,15 @@ public final class FelidaeSettingsState implements PersistentStateComponent<Feli
 
     public static final class SettingsData {
         public String interpreterPath = "";
-        public String debuggerPath = "";
         public String celidaePath = "";
     }
 
     private SettingsData data = new SettingsData();
+    private final Project project;
+
+    public FelidaeSettingsState(Project project) {
+        this.project = project;
+    }
 
     public static @NotNull FelidaeSettingsState getInstance(@NotNull Project project) {
         return project.getService(FelidaeSettingsState.class);
@@ -53,14 +57,6 @@ public final class FelidaeSettingsState implements PersistentStateComponent<Feli
         data.interpreterPath = value;
     }
 
-    public @NotNull String getDebuggerPath() {
-        return data.debuggerPath;
-    }
-
-    public void setDebuggerPath(@NotNull String value) {
-        data.debuggerPath = value;
-    }
-
     public @NotNull String getCelidaePath() {
         return data.celidaePath;
     }
@@ -73,21 +69,21 @@ public final class FelidaeSettingsState implements PersistentStateComponent<Feli
         return resolved(data.interpreterPath);
     }
 
-    public @Nullable Path resolvedDebuggerPath() {
-        return resolved(data.debuggerPath);
-    }
-
     public @Nullable Path resolvedCelidaePath() {
         return resolved(data.celidaePath);
     }
 
-    private static @Nullable Path resolved(@Nullable String raw) {
+    private @Nullable Path resolved(@Nullable String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
         }
         try {
-            Path path = Path.of(raw).toAbsolutePath().normalize();
-            return Files.isRegularFile(path) ? path : null;
+            Path path = Path.of(raw);
+            if (!path.isAbsolute() && project.getBasePath() != null)
+                path = Path.of(project.getBasePath()).resolve(path);
+            // Preserve an explicit invalid path so launching reports it;
+            // never silently substitute a different interpreter.
+            return path.toAbsolutePath().normalize();
         } catch (InvalidPathException exception) {
             return null;
         }

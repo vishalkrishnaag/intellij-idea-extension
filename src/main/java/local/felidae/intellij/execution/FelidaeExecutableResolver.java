@@ -9,23 +9,15 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.List;
+import com.intellij.openapi.util.SystemInfo;
 
 public final class FelidaeExecutableResolver {
-
-    public static final String DEBUG_ENVIRONMENT_VARIABLE =
-            "FELIDAE_DEBUG_PATH";
 
     public static final String VISUALIZER_ENVIRONMENT_VARIABLE =
             "CELIDAE_PATH";
 
     public static final String INTERPRETER_ENVIRONMENT_VARIABLE =
             "FELIDAE_PATH";
-
-    private static final String WINDOWS_DEBUG_EXECUTABLE =
-            "felidae_debug.exe";
-
-    private static final String UNIX_DEBUG_EXECUTABLE =
-            "felidae_debug";
 
     private static final String WINDOWS_VISUALIZER_EXECUTABLE =
             "celidae.exe";
@@ -42,21 +34,6 @@ public final class FelidaeExecutableResolver {
     private FelidaeExecutableResolver() {
         throw new AssertionError(
                 "FelidaeExecutableResolver cannot be instantiated."
-        );
-    }
-
-    public static @Nullable Path resolveDebugger(
-            @NotNull Project project
-    ) {
-        Path configured = FelidaeSettingsState.getInstance(project).resolvedDebuggerPath();
-        if (configured != null) {
-            return configured;
-        }
-        return resolve(
-                project,
-                DEBUG_ENVIRONMENT_VARIABLE,
-                WINDOWS_DEBUG_EXECUTABLE,
-                UNIX_DEBUG_EXECUTABLE
         );
     }
 
@@ -118,31 +95,37 @@ public final class FelidaeExecutableResolver {
             return null;
         }
 
+        String executable = SystemInfo.isWindows ? windowsExecutable : unixExecutable;
+        String nativeStage = SystemInfo.isWindows ? "build/windows-x64/release/dist/bin" :
+                SystemInfo.isMac ? "build/macos-" +
+                        (System.getProperty("os.arch").equals("aarch64") ? "arm64" : "x86_64") +
+                        "/release/dist/bin" : "build/release/dist/bin";
         List<Path> candidates = List.of(
-                projectRoot.resolve("build")
-                        .resolve(windowsExecutable),
-
-                projectRoot.resolve("build")
-                        .resolve(unixExecutable),
-
-                projectRoot.resolve("bin")
-                        .resolve(windowsExecutable),
-
-                projectRoot.resolve("bin")
-                        .resolve(unixExecutable),
-
-                projectRoot.resolve(windowsExecutable),
-
-                projectRoot.resolve(unixExecutable)
-        );
+                projectRoot.resolve("dist/bin").resolve(executable),
+                projectRoot.resolve("release/bin").resolve(executable),
+                projectRoot.resolve(nativeStage).resolve(executable),
+                projectRoot.resolve("build/release/dist/bin").resolve(executable),
+                projectRoot.resolve("build/release").resolve(executable),
+                projectRoot.resolve("bin").resolve(executable),
+                projectRoot.resolve(executable));
 
         for (Path candidate : candidates) {
             Path normalized = candidate
                     .toAbsolutePath()
                     .normalize();
 
-            if (Files.isRegularFile(normalized)) {
+            if (Files.isRegularFile(normalized) && (SystemInfo.isWindows || Files.isExecutable(normalized))) {
                 return normalized;
+            }
+        }
+
+        String searchPath = System.getenv("PATH");
+        if (searchPath != null) {
+            for (String directory : searchPath.split(java.io.File.pathSeparator)) {
+                if (directory.isBlank()) continue;
+                Path candidate = Path.of(directory).resolve(executable);
+                if (Files.isRegularFile(candidate) && (SystemInfo.isWindows || Files.isExecutable(candidate)))
+                    return candidate.toAbsolutePath().normalize();
             }
         }
 

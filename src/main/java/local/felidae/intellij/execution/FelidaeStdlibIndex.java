@@ -13,10 +13,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Caches the set of importable core library names that felidae_debug
- * reports through {@code felidae_debug --list-libraries}. Celidae owns
- * fact-relationship visualization only (ER diagrams, graphs, tree diagrams,
- * statistical views) and has no library-listing flag of its own.
+ * Caches the set of importable core library names that {@code felidae}
+ * reports through {@code felidae --list-libraries}.
  *
  * The syntax highlighter needs this list synchronously on every keystroke, so
  * it never shells out directly. Instead, {@link #refreshFrom(Path)} is called
@@ -24,14 +22,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * which already runs on a background thread) and the result is cached here.
  * Until a refresh succeeds, {@link #getLibraries()} returns a small built-in
  * default so highlighting still works in a fresh project that has not run
- * felidae_debug yet.
+ * felidae yet.
  */
 public final class FelidaeStdlibIndex {
 
     /**
-     * Built-in fallback, used only until {@code celidae --list-libraries}
+     * Built-in fallback, used only until {@code felidae --list-libraries}
      * has answered at least once. Kept intentionally small; the authoritative
-     * list always comes from Celidae.
+     * list always comes from Felidae.
      */
     private static final Set<String> DEFAULT_LIBRARIES = Set.of(
             "array", "comparison", "console", "csv", "db", "exception", "fact",
@@ -55,51 +53,57 @@ public final class FelidaeStdlibIndex {
     }
 
     /**
-     * Refreshes the cached library set from {@code celidaeExecutable
+     * Refreshes the cached library set from {@code felidaeExecutable
      * --list-libraries}, synchronously, on the calling thread. Callers must
      * invoke this from a background thread (e.g. an ExternalAnnotator's
      * doAnnotate). A no-op once a given executable has already been queried
      * successfully.
      */
-    public static void refreshFrom(@NotNull Path celidaeExecutable) {
-        if (celidaeExecutable.equals(lastRefreshedExecutable)) {
+    public static void refreshFrom(@NotNull Path felidaeExecutable) {
+        if (felidaeExecutable.equals(lastRefreshedExecutable)) {
             return;
         }
         if (!REFRESH_IN_FLIGHT.compareAndSet(false, true)) {
             return;
         }
         try {
-            if (!Files.isRegularFile(celidaeExecutable)) {
+            if (!Files.isRegularFile(felidaeExecutable)) {
                 return;
             }
-            Set<String> fetched = query(celidaeExecutable);
+            Set<String> fetched = query(felidaeExecutable);
             if (fetched != null && !fetched.isEmpty()) {
                 libraries = fetched;
-                lastRefreshedExecutable = celidaeExecutable;
+                lastRefreshedExecutable = felidaeExecutable;
             }
         } finally {
             REFRESH_IN_FLIGHT.set(false);
         }
     }
 
-    private static Set<String> query(@NotNull Path celidaeExecutable) {
+    private static Set<String> query(@NotNull Path felidaeExecutable) {
         ProcessBuilder builder = new ProcessBuilder(
-                celidaeExecutable.toString(),
+                felidaeExecutable.toString(),
                 "--list-libraries"
         );
         builder.redirectErrorStream(true);
 
+        Process process = null;
         try {
-            Process process = builder.start();
-            StringBuilder output = new StringBuilder();
-
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    output.append(line);
+            process = builder.start();
+            Process running = process;
+            // Drain stdout concurrently so both large output and a silent
+            // stalled interpreter remain subject to the timeout below.
+            var output = java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(running.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder text = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) text.append(line);
+                    return text.toString();
+                } catch (java.io.IOException error) {
+                    throw new java.io.UncheckedIOException(error);
                 }
-            }
+            });
 
             boolean finished = process.waitFor(5, TimeUnit.SECONDS);
             if (!finished) {
@@ -109,14 +113,19 @@ public final class FelidaeStdlibIndex {
             if (process.exitValue() != 0) {
                 return null;
             }
-            return parseJsonStringArray(output.toString());
+            return parseJsonStringArray(output.get(2, TimeUnit.SECONDS));
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return null;
         } catch (Exception exception) {
             return null;
+        } finally {
+            if (process != null && process.isAlive()) process.destroyForcibly();
         }
     }
 
     /**
-     * Minimal parser for the flat JSON string array Celidae prints, e.g.
+     * Minimal parser for the flat JSON string array Felidae prints, e.g.
      * {@code ["array","console","math"]}. Avoids a JSON library dependency
      * for a single, well-controlled shape.
      */

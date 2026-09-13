@@ -1,13 +1,13 @@
 # Felidae IntelliJ IDEA Plugin
 
 IntelliJ IDEA language support for Felidae `.fx` files, backed by the
-felidae_debug AST analysis for diagnostics and Celidae for fact graph inspection.
+the Felidae interpreter's AST analysis for diagnostics and Celidae for fact graph inspection.
 
 ## Features
 
 - Registers `.fx` as Felidae files
 - Basic syntax highlighting for comments, strings, numbers, keywords, operators, and core library calls
-- Diagnostics from `felidae_debug --check-json`, including C++ AST analyzer warnings
+- Diagnostics from `felidae --check-json`, including C++ AST analyzer warnings
 - Celidae visual analytics action using `celidae --inspect-graph`
 - Brace matching for `()`, `{}`, and `[]`
 - File type, action, and tool-window icons
@@ -17,37 +17,46 @@ felidae_debug AST analysis for diagnostics and Celidae for fact graph inspection
 - A gutter icon above `main(...)` to run (click) or check/visualize (right-click)
 - Go to Declaration (Ctrl+B / Ctrl+Click) for facts, methods, and stdlib calls
 - A "Run Felidae Query..." action, mirroring the VS Code extension's Run Query command
-- A Settings > Tools > Felidae page for the felidae/felidae_debug/celidae executable paths
+- A Settings > Tools > Felidae page for the felidae/celidae executable paths
 
 The plugin intentionally does not implement Felidae semantic validation in Java.
-It delegates file checks to felidae_debug so IntelliJ IDEA, VS Code, and the
+It delegates file checks to felidae so IntelliJ IDEA, VS Code, and the
 runtime stay aligned. Celidae is a separate tool dedicated to fact-relationship
 visualization (ER diagrams, graphs, tree diagrams, statistical views) and has
 no diagnostics support of its own.
 
-felidae_debug also exposes `felidae_debug --lsp` for JSON-RPC stdio clients. The IntelliJ
+felidae also exposes `felidae --lsp` for JSON-RPC stdio clients. The IntelliJ
 plugin uses direct `--check-json` diagnostics today so it stays lightweight and
 does not duplicate language semantics in Java.
 
-## Debug Host
+## Interpreter and platforms
+
+Checks and execution use the same interpreter setting. User programs launch
+through Command Prompt on Windows and /bin/sh on Linux/macOS. Interpreter paths
+in Settings are relative to the project directory unless absolute. Use
+felidae.exe on Windows and felidae on Linux/macOS; FELIDAE_PATH and PATH discovery
+are available when the setting is empty.
+
+This plugin provides Run and Check actions; it does not implement an IntelliJ
+debug adapter. Interactive stepping is currently available through VS Code or
+the interpreter's --debug terminal protocol.
+
+## Executable discovery
 
 By default the plugin looks for:
 
 ```text
-<project-root>/build/celidae.exe
-<project-root>/build/celidae
-<project-root>/build/felidae_debug.exe
-<project-root>/build/felidae_debug
+<project-root>/dist/bin/felidae
+<project-root>/release/bin/felidae
+<project-root>/build/release/dist/bin/felidae
+<project-root>/build/release/felidae
 ```
 
 You can override this with:
 
 ```powershell
-$env:CELIDAE_PATH="C:\path\to\celidae.exe"
+$env:FELIDAE_PATH="C:\path\to\felidae.exe"
 ```
-
-The old `FELIDAE_DEBUG_PATH` and `build/felidae_debug.exe` names are still
-accepted as migration fallbacks.
 
 Alternatively, set explicit paths under **Settings | Tools | Felidae** — those
 take priority over both environment variables and auto-detection.

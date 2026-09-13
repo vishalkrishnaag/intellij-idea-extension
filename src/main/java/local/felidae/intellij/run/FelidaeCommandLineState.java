@@ -9,6 +9,7 @@ import com.intellij.execution.process.ProcessTerminatedListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.configurations.CommandLineState;
 import local.felidae.intellij.execution.FelidaeExecutableResolver;
+import local.felidae.intellij.execution.FelidaeProcessRunner;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
@@ -36,21 +37,18 @@ public final class FelidaeCommandLineState
                 configuration.getSourceFile()
         ).toAbsolutePath().normalize();
 
-        GeneralCommandLine commandLine =
-                new GeneralCommandLine();
-
-        commandLine.setExePath(interpreter.toString());
-        commandLine.setCharset(StandardCharsets.UTF_8);
-        commandLine.addParameter(sourceFile.toString());
+        java.util.ArrayList<String> parameters = new java.util.ArrayList<>();
+        parameters.add(sourceFile.toString());
 
         String arguments =
                 configuration.getProgramArguments();
 
         if (!arguments.isBlank()) {
-            commandLine.addParameters(
+            parameters.addAll(
                     ParametersListUtil.parse(arguments)
             );
         }
+        GeneralCommandLine commandLine = FelidaeProcessRunner.shellCommand(interpreter, parameters);
 
         Path workingDirectory =
                 resolveWorkingDirectory(sourceFile);

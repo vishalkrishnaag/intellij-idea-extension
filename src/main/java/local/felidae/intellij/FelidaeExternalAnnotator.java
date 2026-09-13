@@ -95,7 +95,7 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
             return null;
         }
 
-        Path debugHost = resolveDebugHost(file.getProject());
+        Path debugHost = FelidaeExecutableResolver.resolveInterpreter(file.getProject());
 
         return new CheckRequest(sourceFile, debugHost);
     }
@@ -111,9 +111,9 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
         if (debugHost == null || !Files.isRegularFile(debugHost)) {
             diagnostics.add(new CheckDiagnostic(
                     "warning",
-                    "Felidae AST debugger executable was not found. " +
-                            "Set " + FelidaeExecutableResolver.DEBUG_ENVIRONMENT_VARIABLE +
-                            " or place build/felidae_debug.exe under the project root.",
+                    "Felidae interpreter executable was not found. " +
+                            "Set " + FelidaeExecutableResolver.INTERPRETER_ENVIRONMENT_VARIABLE +
+                            " or configure the Felidae interpreter path.",
                     1,
                     1
             ));
@@ -182,7 +182,7 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
 
                 diagnostics.add(new CheckDiagnostic(
                         "warning",
-                        "Celidae --check-json timed out after " +
+                        "Felidae --check-json timed out after " +
                                 CHECK_TIMEOUT.toSeconds() + " seconds.",
                         1,
                         1
@@ -206,7 +206,7 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
                 diagnostics.add(
                         parseRuntimeError(
                                 output.isBlank()
-                                        ? "Celidae check failed with exit code " +
+                                        ? "Felidae check failed with exit code " +
                                         process.exitValue() + "."
                                         : output
                         )
@@ -215,7 +215,7 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
         } catch (IOException exception) {
             diagnostics.add(new CheckDiagnostic(
                     "warning",
-                    "Cannot run Celidae --check-json: " +
+                    "Cannot run Felidae --check-json: " +
                             safeMessage(exception),
                     1,
                     1
@@ -229,7 +229,7 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
 
             diagnostics.add(new CheckDiagnostic(
                     "warning",
-                    "Celidae --check-json was interrupted.",
+                    "Felidae --check-json was interrupted.",
                     1,
                     1
             ));
@@ -323,11 +323,6 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
                 FILE_EXTENSION.equalsIgnoreCase(extension);
     }
 
-    private static @Nullable Path resolveDebugHost(
-            @NotNull Project project
-    ) {
-        return FelidaeExecutableResolver.resolveDebugger(project);
-    }
 
     private static String readProcessOutput(
             @NotNull CompletableFuture<String> outputFuture

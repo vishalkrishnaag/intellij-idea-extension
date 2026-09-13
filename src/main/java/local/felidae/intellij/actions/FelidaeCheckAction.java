@@ -40,7 +40,7 @@ public final class FelidaeCheckAction
         }
 
         Path debugger =
-                FelidaeExecutableResolver.resolveDebugger(project);
+                FelidaeExecutableResolver.resolveInterpreter(project);
 
         if (debugger == null) {
             FelidaeConsoleService console =
@@ -49,11 +49,9 @@ public final class FelidaeCheckAction
             console.show();
             console.clear();
             console.printError(
-                    "Felidae AST debugger executable was not found.\n\n" +
-                            "Expected location:\n" +
-                            "  <project>/build/felidae_debug.exe\n\n" +
-                            "Alternatively, configure the FELIDAE_DEBUG_PATH " +
-                            "environment variable.\n"
+                    "Felidae interpreter executable was not found.\n\n" +
+                            "Configure the FELIDAE_PATH environment variable or the " +
+                            "Felidae interpreter path.\n"
             );
 
             return;
