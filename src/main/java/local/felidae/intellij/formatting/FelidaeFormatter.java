@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Structural, line-based beautifier for Felidae source. Felidae has no
@@ -99,36 +100,20 @@ public final class FelidaeFormatter {
         return width;
     }
 
-    /** A depth-0 {@code =>} or word-boundary {@code then} that is the last
-     * token on the (masked) line means "this block's body continues on
-     * later lines." One with content after it on the same line
-     * ({@code Foo() => return}, {@code if x then return 1}) is a complete
-     * inline block - nothing to open. */
-    private static boolean opensBlock(String masked) {
-        int localDepth = 0;
-        int tailKeywordEnd = -1;
-        int length = masked.length();
-        for (int i = 0; i < length; i++) {
-            char ch = masked.charAt(i);
-            if (OPENERS.indexOf(ch) >= 0) {
-                localDepth++;
-            } else if (CLOSERS.indexOf(ch) >= 0) {
-                localDepth--;
-            } else if (localDepth == 0) {
-                if (ch == '=' && i + 1 < length && masked.charAt(i + 1) == '>') {
-                    tailKeywordEnd = i + 2;
-                } else if (masked.startsWith("then", i)
-                        && (i == 0 || Character.isWhitespace(masked.charAt(i - 1)))
-                        && (i + 4 >= length || !isIdentifierChar(masked.charAt(i + 4)))) {
-                    tailKeywordEnd = i + 4;
-                }
-            }
-        }
-        return tailKeywordEnd >= 0 && masked.substring(tailKeywordEnd).isBlank();
-    }
+    private static final Pattern BRANCH =
+            Pattern.compile("(?:else\\b|catch\\b.*\\bthen|case\\b.*\\bthen|default\\s+then)\\s*");
+    private static final List<Pattern> OPENS_BLOCK = List.of(
+            Pattern.compile("\\s*class\\s+[A-Za-z_][A-Za-z0-9_.]*(?:\\s+extends?\\b.*)?\\s*"),
+            Pattern.compile("\\s*def\\s+[A-Za-z_][A-Za-z0-9_.]*\\s*\\([^)]*\\)\\s*=>\\s*"),
+            Pattern.compile("\\s*(?:for\\b.*\\bthen|while\\b.*\\bthen|switch\\b.*|try)\\s*"));
 
-    private static boolean isIdentifierChar(char ch) {
-        return Character.isLetterOrDigit(ch) || ch == '_';
+    /** Only constructs that own an explicit {@code end} open a frame: class,
+     * {@code def ... =>}, {@code for}/{@code while ... then}, {@code switch}
+     * and {@code try}. A conditional {@code then} expression has no
+     * {@code end}, and else/catch/case/default continue the surrounding
+     * frame instead of opening another one. */
+    private static boolean opensBlock(String masked) {
+        return OPENS_BLOCK.stream().anyMatch(pattern -> pattern.matcher(masked).matches());
     }
 
     /** Formats a list of EOL-free lines. */
@@ -159,7 +144,8 @@ public final class FelidaeFormatter {
 
             String masked = maskLine(rawLine);
             boolean isComment = trimmed.startsWith("#");
-            boolean isBareElse = trimmed.equals("else");
+            boolean isBranch = BRANCH.matcher(trimmed).matches();
+            boolean isBareEnd = trimmed.equals("end");
             // A comment's own column is only trustworthy as a dedent signal
             // when it opens a new paragraph (preceded by a blank line, or
             // file start) - a leading doc-comment for the next top-level
@@ -171,18 +157,22 @@ public final class FelidaeFormatter {
 
             if (rawBracketDepthBox[0] == 0 && (!isComment || commentTrustsOwnColumn)) {
                 int width = leadingWidth(rawLine);
-                if (isBareElse) {
+                if (isBareEnd) {
+                    if (!frames.isEmpty()) frames.pop();
+                } else if (isBranch) {
                     while (!frames.isEmpty() && width < frames.peek().headWidth()) frames.pop();
-                    // If the top frame's head is at exactly this width, `else`
-                    // pairs with it (stays open, body resumes). Otherwise
-                    // (malformed input) fall through and print best-effort.
+                    // If the top frame's head is at exactly this width, the
+                    // branch pairs with it (stays open, body resumes).
+                    // Otherwise (malformed input) fall through best-effort.
                 } else {
                     while (!frames.isEmpty() && width <= frames.peek().headWidth()) frames.pop();
                 }
             }
 
             int depthUnits;
-            if (isBareElse && !frames.isEmpty()) {
+            if (isBareEnd) {
+                depthUnits = frames.size() + bracketLevels.size();
+            } else if (isBranch && !frames.isEmpty()) {
                 depthUnits = frames.size() - 1 + bracketLevels.size();
             } else {
                 // Leading closers dedent this line immediately.

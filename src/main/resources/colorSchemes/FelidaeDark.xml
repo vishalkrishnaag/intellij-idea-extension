@@ -36,6 +36,40 @@
                 <option name="FONT_TYPE" value="1"/>
             </value>
         </option>
+        <option name="FELIDAE_ATOM">
+            <value>
+                <option name="FOREGROUND" value="c3e88d"/>
+            </value>
+        </option>
+        <option name="FELIDAE_DEF_FUNCTION">
+            <value>
+                <option name="FOREGROUND" value="18f0d7"/>
+                <option name="FONT_TYPE" value="1"/>
+            </value>
+        </option>
+        <option name="FELIDAE_DEF_FACT">
+            <value>
+                <option name="FOREGROUND" value="f7a93f"/>
+                <option name="FONT_TYPE" value="1"/>
+            </value>
+        </option>
+        <option name="FELIDAE_DEF_BINDING">
+            <value>
+                <option name="FOREGROUND" value="c4a2ff"/>
+                <option name="FONT_TYPE" value="1"/>
+            </value>
+        </option>
+        <option name="FELIDAE_BLOCK_MATCH">
+            <value>
+                <option name="BACKGROUND" value="3a3f5a"/>
+                <option name="FONT_TYPE" value="1"/>
+            </value>
+        </option>
+        <option name="FELIDAE_END">
+            <value>
+                <option name="FOREGROUND" value="a8708f"/>
+            </value>
+        </option>
         <option name="FELIDAE_OPERATOR">
             <value>
                 <option name="FOREGROUND" value="7fd8ff"/>

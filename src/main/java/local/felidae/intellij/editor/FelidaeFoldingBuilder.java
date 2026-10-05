@@ -86,8 +86,8 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
             List<FoldingDescriptor> descriptors
     ) {
         Pattern opener = Pattern.compile(
-                "^\\s*(?:class\\s+[A-Za-z_][A-Za-z0-9_]*(?:\\s+extend\\b.*)?"
-                        + "|[A-Za-z_][A-Za-z0-9_:.]*\\s*\\([^)]*\\)\\s*=>\\s*(?:#.*)?)$");
+                "^\\s*(?:class\\b.*|(?:for|while|switch)\\b.*|try\\s*(?:#.*)?"
+                        + "|(?:def\\s+)?[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*\\)\\s*=>\\s*(?:#.*)?)$");
         Pattern closer = Pattern.compile("^\\s*end\\.?\\s*(?:#.*)?$");
         List<Integer> starts = new ArrayList<>();
         for (int line = 0; line < lines.length; line++) {

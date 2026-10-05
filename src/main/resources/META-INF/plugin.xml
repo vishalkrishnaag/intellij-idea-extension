@@ -47,6 +47,9 @@
                 language="Felidae"
                 implementationClass="local.felidae.intellij.editor.FelidaeBraceMatcher"/>
 
+        <editorFactoryListener
+                implementation="local.felidae.intellij.editor.FelidaeBlockHighlighter"/>
+
         <lang.foldingBuilder
                 language="Felidae"
                 implementationClass="local.felidae.intellij.editor.FelidaeFoldingBuilder"/>

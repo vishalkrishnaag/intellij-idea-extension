@@ -14,6 +14,7 @@ import local.felidae.intellij.execution.FelidaeStdlibIndex;
 import local.felidae.intellij.highlighting.FelidaeTextAttributes;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Lightweight lexical highlighter for Felidae source files.
@@ -68,6 +69,21 @@ public final class FelidaeSyntaxHighlighter
     public static final IElementType KEYWORD =
             new FelidaeTokenType("KEYWORD");
 
+    public static final IElementType ATOM =
+            new FelidaeTokenType("ATOM");
+
+    public static final IElementType DEF_FUNCTION =
+            new FelidaeTokenType("DEF_FUNCTION");
+
+    public static final IElementType DEF_FACT =
+            new FelidaeTokenType("DEF_FACT");
+
+    public static final IElementType DEF_BINDING =
+            new FelidaeTokenType("DEF_BINDING");
+
+    public static final IElementType END_KEYWORD =
+            new FelidaeTokenType("END_KEYWORD");
+
     public static final IElementType OPERATOR =
             new FelidaeTokenType("OPERATOR");
 
@@ -121,6 +137,21 @@ public final class FelidaeSyntaxHighlighter
 
     private static final TextAttributesKey[] KEYWORD_KEYS =
             pack(FelidaeTextAttributes.KEYWORD);
+
+    private static final TextAttributesKey[] DEF_FUNCTION_KEYS =
+            pack(FelidaeTextAttributes.DEF_FUNCTION);
+
+    private static final TextAttributesKey[] DEF_FACT_KEYS =
+            pack(FelidaeTextAttributes.DEF_FACT);
+
+    private static final TextAttributesKey[] DEF_BINDING_KEYS =
+            pack(FelidaeTextAttributes.DEF_BINDING);
+
+    private static final TextAttributesKey[] ATOM_KEYS =
+            pack(FelidaeTextAttributes.ATOM);
+
+    private static final TextAttributesKey[] END_KEYS =
+            pack(FelidaeTextAttributes.END);
 
     private static final TextAttributesKey[] OPERATOR_KEYS =
             pack(FelidaeTextAttributes.OPERATOR);
@@ -182,6 +213,26 @@ public final class FelidaeSyntaxHighlighter
 
         if (tokenType == NUMBER) {
             return NUMBER_KEYS;
+        }
+
+        if (tokenType == DEF_FUNCTION) {
+            return DEF_FUNCTION_KEYS;
+        }
+
+        if (tokenType == DEF_FACT) {
+            return DEF_FACT_KEYS;
+        }
+
+        if (tokenType == DEF_BINDING) {
+            return DEF_BINDING_KEYS;
+        }
+
+        if (tokenType == ATOM) {
+            return ATOM_KEYS;
+        }
+
+        if (tokenType == END_KEYWORD) {
+            return END_KEYS;
         }
 
         if (tokenType == KEYWORD) {
@@ -275,15 +326,30 @@ public final class FelidaeSyntaxHighlighter
             extends LexerBase {
 
         private static final Set<String> KEYWORDS = Set.of(
+                "def",
                 "import",
                 "class",
                 "extend",
+                "extends",
+                "index",
                 "where",
                 "if",
                 "else",
-                "return",
-                "lambda",
                 "then",
+                "for",
+                "in",
+                "while",
+                "switch",
+                "case",
+                "default",
+                "break",
+                "continue",
+                "try",
+                "catch",
+                "new",
+                "this",
+                "super",
+                "lambda",
                 "end",
                 "true",
                 "false",
@@ -376,6 +442,10 @@ public final class FelidaeSyntaxHighlighter
                 return;
             }
 
+            if (current == '\'' && readAtom()) {
+                return;
+            }
+
             if (Character.isDigit(current)) {
                 readNumber();
                 return;
@@ -455,6 +525,53 @@ public final class FelidaeSyntaxHighlighter
                     : UNTERMINATED_STRING;
         }
 
+        /**
+         * A quoted atom such as {@code 'left plus right'} is a data atom, not
+         * a string. It must close on the same line; otherwise the quote is
+         * left to the generic fallback and this returns false.
+         */
+        private static final Pattern DEF_FUNCTION_REST =
+                Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\([^)]*\\)\\s*=>.*");
+        private static final Pattern DEF_BINDING_REST =
+                Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_]*\\s*:.*");
+        private static final Pattern DEF_FACT_REST =
+                Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*");
+
+        /**
+         * {@code def} declares a function ({@code def f(...) =>}), a binding or
+         * class field ({@code def x := 1.}, {@code def id: string.}) or a
+         * persistent fact ({@code def Name(...).}); the rest of the line decides.
+         */
+        private @NotNull IElementType classifyDef() {
+            int lineEnd = tokenEnd;
+            while (lineEnd < bufferEnd
+                    && buffer.charAt(lineEnd) != '\n'
+                    && buffer.charAt(lineEnd) != '\r') {
+                lineEnd++;
+            }
+            String rest = buffer.subSequence(tokenEnd, lineEnd).toString();
+            if (DEF_FUNCTION_REST.matcher(rest).matches()) return DEF_FUNCTION;
+            if (DEF_BINDING_REST.matcher(rest).matches()) return DEF_BINDING;
+            if (DEF_FACT_REST.matcher(rest).matches()) return DEF_FACT;
+            return KEYWORD;
+        }
+
+        private boolean readAtom() {
+            int end = tokenStart + 1;
+            while (end < bufferEnd) {
+                char current = buffer.charAt(end++);
+                if (current == '\'') {
+                    tokenEnd = end;
+                    tokenType = ATOM;
+                    return true;
+                }
+                if (current == '\n' || current == '\r') {
+                    return false;
+                }
+            }
+            return false;
+        }
+
         private void readNumber() {
             tokenEnd = tokenStart;
 
@@ -523,6 +640,16 @@ public final class FelidaeSyntaxHighlighter
             String text = buffer
                     .subSequence(tokenStart, tokenEnd)
                     .toString();
+
+            if (text.equals("def")) {
+                tokenType = classifyDef();
+                return;
+            }
+
+            if (text.equals("end")) {
+                tokenType = END_KEYWORD;
+                return;
+            }
 
             if (KEYWORDS.contains(text)) {
                 tokenType = KEYWORD;

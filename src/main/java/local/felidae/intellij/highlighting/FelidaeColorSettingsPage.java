@@ -33,6 +33,18 @@ public final class FelidaeColorSettingsPage
                     "Keywords",
                     FelidaeTextAttributes.KEYWORD
             ),
+            new AttributesDescriptor("def function", FelidaeTextAttributes.DEF_FUNCTION),
+            new AttributesDescriptor("def fact", FelidaeTextAttributes.DEF_FACT),
+            new AttributesDescriptor("def binding", FelidaeTextAttributes.DEF_BINDING),
+            new AttributesDescriptor("Block under caret", FelidaeTextAttributes.BLOCK_MATCH),
+            new AttributesDescriptor(
+                    "Quoted atoms",
+                    FelidaeTextAttributes.ATOM
+            ),
+            new AttributesDescriptor(
+                    "Block end",
+                    FelidaeTextAttributes.END
+            ),
             new AttributesDescriptor(
                     "Operators",
                     FelidaeTextAttributes.OPERATOR

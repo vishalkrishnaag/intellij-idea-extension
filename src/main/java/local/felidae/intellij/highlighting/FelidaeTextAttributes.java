@@ -31,6 +31,36 @@ public final class FelidaeTextAttributes {
                     DefaultLanguageHighlighterColors.KEYWORD
             );
 
+    /** `def` introducing a function: def f(...) =>. */
+    public static final TextAttributesKey DEF_FUNCTION =
+            key("FELIDAE_DEF_FUNCTION", FelidaeTextAttributes.KEYWORD);
+
+    /** `def` introducing a persistent fact: def Name(...). */
+    public static final TextAttributesKey DEF_FACT =
+            key("FELIDAE_DEF_FACT", FelidaeTextAttributes.KEYWORD);
+
+    /** `def` introducing a binding or class field: def x := 1. */
+    public static final TextAttributesKey DEF_BINDING =
+            key("FELIDAE_DEF_BINDING", FelidaeTextAttributes.KEYWORD);
+
+    /** Opener and `end` of the block under the caret. */
+    public static final TextAttributesKey BLOCK_MATCH =
+            key("FELIDAE_BLOCK_MATCH", DefaultLanguageHighlighterColors.MARKUP_ENTITY);
+
+    /** Quoted data atom such as 'pending'; distinct from a string. */
+    public static final TextAttributesKey ATOM =
+            key(
+                    "FELIDAE_ATOM",
+                    DefaultLanguageHighlighterColors.CONSTANT
+            );
+
+    /** Block terminator; styled apart from other keywords so closers stand out. */
+    public static final TextAttributesKey END =
+            key(
+                    "FELIDAE_END",
+                    FelidaeTextAttributes.KEYWORD
+            );
+
     public static final TextAttributesKey OPERATOR =
             key(
                     "FELIDAE_OPERATOR",

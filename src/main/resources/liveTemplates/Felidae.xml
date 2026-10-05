@@ -1,96 +1,142 @@
 <templateSet group="Felidae">
-    <template name="main" value="main(arguments: system.stdin) =&gt;&#10;    status := system.print(value: &quot;Felidae system running!&quot;)&#10;    return (&#10;        status: status&#10;    )" description="Create a direct-execution entry point" toReformat="false" toShortenFQNames="false">
+    <template name="import" value="import &quot;$V1$&quot;." description="Import a Felidae source file" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;file.fx&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="fact" value="$PREDICATE$($NAME$: $VALUE$)" description="Create a Felidae fact" toReformat="false" toShortenFQNames="false">
-        <variable name="PREDICATE" expression="" defaultValue="&quot;Predicate&quot;" alwaysStopAt="true"/>
-        <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
-        <variable name="VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+    <template name="fact" value="def $V1$($V2$: $V3$, $V4$: $V5$)." description="Declare a persistent fact seed" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;employee&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;id&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;\&quot;e1\&quot;&quot;" alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue="&quot;state&quot;" alwaysStopAt="true"/>
+        <variable name="V5" expression="" defaultValue="&quot;active&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="method" value="$NAME$($INPUT$: $TYPE$) =&gt;&#10;    $ITEM$ := $INPUT$&#10;    where $ITEM$.$FIELD$ &gt;= $THRESHOLD$&#10;    return (&#10;        $RESULTNAME$: $ITEM$.$RESULTFIELD$&#10;    )" description="Create a method-style typed rule" toReformat="false" toShortenFQNames="false">
-        <variable name="NAME" expression="" defaultValue="&quot;isAdult&quot;" alwaysStopAt="true"/>
-        <variable name="INPUT" expression="" defaultValue="&quot;input&quot;" alwaysStopAt="true"/>
-        <variable name="TYPE" expression="" defaultValue="&quot;Person&quot;" alwaysStopAt="true"/>
-        <variable name="ITEM" expression="" defaultValue="&quot;p&quot;" alwaysStopAt="true"/>
-        <variable name="FIELD" expression="" defaultValue="&quot;age&quot;" alwaysStopAt="true"/>
-        <variable name="THRESHOLD" expression="" defaultValue="&quot;18&quot;" alwaysStopAt="true"/>
-        <variable name="RESULTNAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
-        <variable name="RESULTFIELD" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <template name="binding" value="def $V1$$V2$ := $V4$." description="Declare an immutable interpreter binding" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;: any&quot;" alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue="&quot;expression&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="methodend" value="$NAME$($INPUT$: $TYPE$) =&gt;&#10;    $ITEM$ := $INPUT$&#10;    return ($RESULTNAME$: $ITEM$)&#10;end" description="Create a method with an explicit end boundary" toReformat="false" toShortenFQNames="false">
-        <variable name="NAME" expression="" defaultValue="&quot;methodName&quot;" alwaysStopAt="true"/>
-        <variable name="INPUT" expression="" defaultValue="&quot;input&quot;" alwaysStopAt="true"/>
-        <variable name="TYPE" expression="" defaultValue="&quot;Type&quot;" alwaysStopAt="true"/>
-        <variable name="ITEM" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
-        <variable name="RESULTNAME" expression="" defaultValue="&quot;result&quot;" alwaysStopAt="true"/>
-        <context><option name="OTHER" value="true"/></context>
-    </template>
-
-    <template name="class" value="class $NAME$&#10;    $FIELD$: $TYPE$&#10;end" description="Create a class with an explicit end boundary" toReformat="false" toShortenFQNames="false">
-        <variable name="NAME" expression="" defaultValue="&quot;TypeName&quot;" alwaysStopAt="true"/>
-        <variable name="FIELD" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
-        <variable name="TYPE" expression="" defaultValue="&quot;string&quot;" alwaysStopAt="true"/>
-        <context><option name="OTHER" value="true"/></context>
-    </template>
-
-    <template name="fallback" value="$NAME$($INPUT$: $TYPE$) =&gt;&#10;    $ITEM$ := $INPUT$&#10;    $ITEM$.$FIELD$ == &quot;$MATCHVALUE$&quot;&#10;    return (&#10;        $RESULTNAME$: $ITEM$.$RESULTFIELD$,&#10;        $STATUSNAME$: &quot;$STATUSVALUE$&quot;&#10;    )&#10;else&#10;    return (&#10;        $RESULTNAME$: $ITEM$.$RESULTFIELD$,&#10;        $STATUSNAME$: &quot;$DEFAULTVALUE$&quot;&#10;    )" description="Create an ordered fallback method-style rule" toReformat="false" toShortenFQNames="false">
-        <variable name="NAME" expression="" defaultValue="&quot;RoleAccess&quot;" alwaysStopAt="true"/>
-        <variable name="INPUT" expression="" defaultValue="&quot;input&quot;" alwaysStopAt="true"/>
-        <variable name="TYPE" expression="" defaultValue="&quot;Employee&quot;" alwaysStopAt="true"/>
-        <variable name="ITEM" expression="" defaultValue="&quot;e&quot;" alwaysStopAt="true"/>
-        <variable name="FIELD" expression="" defaultValue="&quot;role&quot;" alwaysStopAt="true"/>
-        <variable name="MATCHVALUE" expression="" defaultValue="&quot;Engineer&quot;" alwaysStopAt="true"/>
-        <variable name="RESULTNAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
-        <variable name="RESULTFIELD" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
-        <variable name="STATUSNAME" expression="" defaultValue="&quot;status&quot;" alwaysStopAt="true"/>
-        <variable name="STATUSVALUE" expression="" defaultValue="&quot;engineering&quot;" alwaysStopAt="true"/>
-        <variable name="DEFAULTVALUE" expression="" defaultValue="&quot;default&quot;" alwaysStopAt="true"/>
+    <template name="function" value="def $V1$($V2$: $V3$) =&gt;&#10;    $V4$.&#10;end" description="Declare an implicit-result function" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;any&quot;" alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue="&quot;expression&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="lambda" value="lambda($TYPE$, $ITEM$ =&gt; $ITEM$.$FIELD$ &gt;= $VALUE$)" description="Create a lambda filter or map expression" toReformat="false" toShortenFQNames="false">
-        <variable name="TYPE" expression="" defaultValue="&quot;Person&quot;" alwaysStopAt="true"/>
-        <variable name="ITEM" expression="" defaultValue="&quot;p&quot;" alwaysStopAt="true"/>
-        <variable name="FIELD" expression="" defaultValue="&quot;age&quot;" alwaysStopAt="true"/>
-        <variable name="VALUE" expression="" defaultValue="&quot;18&quot;" alwaysStopAt="true"/>
+    <template name="main" value="def main() =&gt;&#10;    $V1$.&#10;end" description="Declare the program entry function" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;expression&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="throw" value="throw(msg: &quot;$REASON$&quot;)&#10;error_reason == &quot;$REASON$&quot;" description="Signal and check a Felidae exception reason" toReformat="false" toShortenFQNames="false">
-        <variable name="REASON" expression="" defaultValue="&quot;DivisionByZero&quot;" alwaysStopAt="true"/>
+    <template name="class" value="class $V1$&#10;    key($V2$).&#10;    def $V2$: $V3$.&#10;    def $V4$: $V5$ := $V6$.&#10;end" description="Declare a RocksDB-backed fact schema" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;entity&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;id&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;string&quot;" alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue="&quot;enabled&quot;" alwaysStopAt="true"/>
+        <variable name="V5" expression="" defaultValue="&quot;bool&quot;" alwaysStopAt="true"/>
+        <variable name="V6" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="factall" value="$ROWS$ := $TYPENAME$.all()" description="Read every currently loaded fact assignable to a fact type" toReformat="false" toShortenFQNames="false">
-        <variable name="ROWS" expression="" defaultValue="&quot;rows&quot;" alwaysStopAt="true"/>
-        <variable name="TYPENAME" expression="" defaultValue="&quot;TypeName&quot;" alwaysStopAt="true"/>
+    <template name="condition" value="$V1$ = $V2$ then $V3$ else $V4$." description="Create a conditional expression" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;left&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;right&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue="&quot;fallback&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="factfind" value="$ROWS$ := $TYPENAME$.where($FIELD$: $VALUE$)" description="Read facts of a type whose named field equals a value" toReformat="false" toShortenFQNames="false">
-        <variable name="ROWS" expression="" defaultValue="&quot;rows&quot;" alwaysStopAt="true"/>
-        <variable name="TYPENAME" expression="" defaultValue="&quot;TypeName&quot;" alwaysStopAt="true"/>
-        <variable name="FIELD" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
-        <variable name="VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+    <template name="for" value="for $V1$ in $V2$ then&#10;    $V3$.&#10;end" description="Iterate a list or lazy query cursor" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;item&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;values&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;expression&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="while" value="while $V1$ then&#10;    $V2$.&#10;end" description="Repeat while a Boolean condition is true" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;condition&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;expression&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="switch" value="switch $V1$&#10;case $V2$ then&#10;    $V3$.&#10;default then&#10;    $V4$.&#10;end" description="Create an explicit-break switch block" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;expected&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;expression&quot;" alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue="&quot;fallback&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="try" value="try&#10;    $V1$.&#10;catch $V2$ then&#10;    $V3$.&#10;end" description="Catch a Felidae runtime exception" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;expression&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;error&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;error.message&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="throw" value="throw(kind: $V1$, message: $V2$)." description="Raise a structured exception" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;runtime&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;\&quot;failed\&quot;&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="query" value="$V1$.where($V2$: $V3$)." description="Create a period-terminated RocksDB bucket query" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;employee&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;active&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="link" value="Link(&#10;    from: $V1$,&#10;    to: $V2$,&#10;    properties: {$V3$: $V4$}&#10;)." description="Create an instance graph link" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;left&quot;" alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue="&quot;right&quot;" alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue="&quot;kind&quot;" alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue="&quot;connected&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="isatom" value="is_atom($V1$)." description="Test whether a value is a data atom" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="type" value="type($V1$)." description="Return the concrete runtime type name" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
