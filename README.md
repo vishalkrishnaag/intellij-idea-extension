@@ -25,17 +25,19 @@ runtime stay aligned. Celidae is a separate tool dedicated to fact-relationship
 visualization (ER diagrams, graphs, tree diagrams, statistical views) and has
 no diagnostics support of its own.
 
-felidae also exposes `felidae --lsp` for JSON-RPC stdio clients. The IntelliJ
-plugin uses direct `--check-json` diagnostics today so it stays lightweight and
-does not duplicate language semantics in Java.
+The plugin uses `felidae --check-json` for diagnostics, so it stays lightweight
+and does not duplicate language semantics in Java. (The interpreter has no
+`--lsp` mode.)
 
 ## Interpreter and platforms
 
 Checks and execution use the same interpreter setting. User programs launch
 through Command Prompt on Windows and /bin/sh on Linux/macOS. Interpreter paths
 in Settings are relative to the project directory unless absolute. Use
-felidae.exe on Windows and felidae on Linux/macOS; FELIDAE_PATH and PATH discovery
-are available when the setting is empty.
+felidae.exe on Windows and felidae on Linux/macOS. When the setting is empty the
+plugin uses FELIDAE_PATH, then looks in the project's `dist/bin`, `build/release`
+and `build/debug` (including `build/debug/x64/Debug`) folders, then on PATH. When
+nothing is found, the console lists these places.
 
 This plugin provides Run and Check actions; it does not implement an IntelliJ
 debug adapter. Interactive stepping is currently available through VS Code or

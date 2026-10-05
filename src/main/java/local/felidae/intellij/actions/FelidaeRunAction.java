@@ -48,13 +48,7 @@ public final class FelidaeRunAction
 
             console.show();
             console.clear();
-            console.printError(
-                    "Felidae interpreter was not found.\n\n" +
-                            "Expected location:\n" +
-                            "  <project>/build/felidae.exe\n\n" +
-                            "Alternatively, configure the FELIDAE_PATH " +
-                            "environment variable.\n"
-            );
+            console.printError(FelidaeExecutableResolver.INTERPRETER_NOT_FOUND_MESSAGE);
 
             return;
         }

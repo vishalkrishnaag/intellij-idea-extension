@@ -83,10 +83,7 @@ public final class FelidaeCommandLineState
                 );
 
         if (resolved == null) {
-            throw new ExecutionException(
-                    "Felidae interpreter not found. " +
-                            "Expected build/felidae.exe or FELIDAE_PATH."
-            );
+            throw new ExecutionException(FelidaeExecutableResolver.INTERPRETER_NOT_FOUND_MESSAGE);
         }
 
         return resolved;

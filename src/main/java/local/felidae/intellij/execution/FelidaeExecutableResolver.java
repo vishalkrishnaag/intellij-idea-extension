@@ -31,6 +31,17 @@ public final class FelidaeExecutableResolver {
     private static final String UNIX_INTERPRETER_EXECUTABLE =
             "felidae";
 
+    /**
+     * What every action shows when no interpreter can be found. The locations
+     * are the ones {@link #resolve} searches, so the two cannot drift apart.
+     */
+    public static final String INTERPRETER_NOT_FOUND_MESSAGE =
+            "Felidae interpreter was not found.\n\n" +
+                    "Looked in <project>/dist/bin, build/release, build/debug (and the platform " +
+                    "build folders such as build/debug/x64/Debug) and on PATH.\n\n" +
+                    "Set the interpreter path in Settings | Tools | Felidae, or the " +
+                    "FELIDAE_PATH environment variable.\n";
+
     private FelidaeExecutableResolver() {
         throw new AssertionError(
                 "FelidaeExecutableResolver cannot be instantiated."
@@ -106,6 +117,9 @@ public final class FelidaeExecutableResolver {
                 projectRoot.resolve(nativeStage).resolve(executable),
                 projectRoot.resolve("build/release/dist/bin").resolve(executable),
                 projectRoot.resolve("build/release").resolve(executable),
+                // Development builds, after the release ones: a release build is preferred.
+                projectRoot.resolve("build/debug/x64/Debug").resolve(executable),
+                projectRoot.resolve("build/debug").resolve(executable),
                 projectRoot.resolve("bin").resolve(executable),
                 projectRoot.resolve(executable));
 
