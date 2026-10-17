@@ -7,7 +7,7 @@ import java.util.Set;
 /**
  * The names written before a {@code .} or {@code :} that are libraries rather than values: {@code db} in
  * {@code db.location("...")} of init.fx, and the {@code console} and {@code system} builtins. Java classes
- * imported with {@code import "java:..."} are ordinary class names and need no entry.
+ * imported with {@code import java.util.ArrayList} are ordinary class names and need no entry.
  *
  * The syntax highlighter needs this synchronously on every keystroke, so it is a constant.
  */

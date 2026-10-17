@@ -338,6 +338,7 @@ public final class FelidaeSyntaxHighlighter
         private static final Set<String> KEYWORDS = Set.of(
                 "define",
                 "import",
+                "package",
                 "class",
                 "static",
                 "private",

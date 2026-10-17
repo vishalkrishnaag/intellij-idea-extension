@@ -31,8 +31,7 @@ import java.util.Set;
  * Maps between the JVM and {@code .fx} sources for the debugger. The compiler writes the source file name and a line
  * number for every statement into the classes it generates ({@code SourceFile} and {@code LineNumberTable}), so the
  * mapping is: a location's {@code sourceName} names the file, its line number is the line; and a source position
- * finds its classes by their {@code sourceName}. Felidae classes are in the default package, which keeps the scan
- * over the loaded classes short.
+ * finds its classes by their {@code sourceName}; the scan skips the JDK and library packages.
  */
 final class FelidaePositionManager implements PositionManager {
 
@@ -68,7 +67,7 @@ final class FelidaePositionManager implements PositionManager {
         String sourceName = felidaeSourceName(position);
         List<ReferenceType> classes = new ArrayList<>();
         for (ReferenceType type : process.getVirtualMachineProxy().allClasses()) {
-            if (inPackage(type.name())) continue; // a Felidae class is in the default package
+            if (isLibraryClass(type.name())) continue; // asking a JDK or driver class for its source name is wasted work
             if (sourceName.equals(sourceNameOf(type))) classes.add(type);
         }
         return classes;
@@ -140,12 +139,20 @@ final class FelidaePositionManager implements PositionManager {
         return request;
     }
 
-    /** {@code java.lang.String} is in a package; {@code main$School.Student} (a dotted Felidae class name) is not. */
-    private static boolean inPackage(@NotNull String className) {
-        int dot = className.indexOf('.');
-        int dollar = className.indexOf('$');
-        return dot >= 0 && (dollar < 0 || dot < dollar);
+    /**
+     * The JDK and the libraries a program uses (the TidesDB driver, Jackson). A Felidae class is in the default package
+     * or in the package its file declares ({@code com.acme.app$Box}), so a dot alone does not tell the two apart.
+     */
+    private static boolean isLibraryClass(@NotNull String className) {
+        for (String prefix : LIBRARY_PACKAGES) {
+            if (className.startsWith(prefix)) return true;
+        }
+        return false;
     }
+
+    private static final String[] LIBRARY_PACKAGES = {
+            "java.", "javax.", "jdk.", "sun.", "com.sun.", "com.tidesdb.", "com.fasterxml.", "org.xml.", "org.w3c."
+    };
 
     private static boolean isFelidaeSourceName(@Nullable String sourceName) {
         return sourceName != null && sourceName.endsWith("." + FelidaeFileType.DEFAULT_EXTENSION);

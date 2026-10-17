@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 public final class FelidaeCallResolver {
 
     /**
-     * Declaration head: {@code def name(args) =>} or {@code define name(args) =>} (positional arguments), the head of a function
+     * Declaration head: {@code def name(args) =>} or {@code define name(args) =>}, the head of a function
      * or, indented, of a class method. Kept identical to DECLARATION_PATTERN in
      * vs-code-extension/src/extension.ts.
      *

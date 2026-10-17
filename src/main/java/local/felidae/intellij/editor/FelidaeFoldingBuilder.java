@@ -35,7 +35,7 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
      * top-level {@code new}.
      */
     private static final Pattern TOP_LEVEL_START = Pattern.compile(
-            "^(?:(?:def|define)\\b|(?:private[ \\t]+)?(?:static[ \\t]+)?class\\b|import\\b|@|new\\b)");
+            "^(?:(?:def|define)\\b|(?:private[ \\t]+)?(?:static[ \\t]+)?class\\b|import\\b|package\\b|@|new\\b)");
 
     private static final Pattern COMMENT_LINE = Pattern.compile("^[ \\t]*#");
 
@@ -84,6 +84,7 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
     ) {
         Pattern opener = Pattern.compile(
                 "^\\s*(?:(?:private\\s+)?(?:static\\s+)?class\\b.*|(?:for|while|switch)\\b.*|try\\s*(?:#.*)?"
+                        + "|(?!(?:else|catch|case|default)\\b)\\S.*\\bthen\\s*(?:#.*)?"
                         + "|(?:def|define)\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*\\)\\s*=>\\s*(?:#.*)?)$");
         Pattern closer = Pattern.compile("^\\s*end\\.?\\s*(?:#.*)?$");
         List<Integer> starts = new ArrayList<>();

@@ -110,7 +110,7 @@ public final class FelidaeProcessRunner {
 
     /** The generated program: import the file, run the expression in {@code main()}. */
     public static @NotNull String queryProgram(@NotNull String fileName, @NotNull String expression) {
-        return "import \"" + fileName.replace("\\", "/").replace("\"", "\\\"") + "\".\n\ndef main() =>\n    "
+        return "import \"" + fileName.replace("\\", "/").replace("\"", "\\\"") + "\"\n\ndef main() =>\n    "
                 + expression + "\nend\n";
     }
 

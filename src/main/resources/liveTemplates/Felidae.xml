@@ -6,14 +6,14 @@
         </context>
     </template>
 
-    <template name="importjava" value='import "java:$V1$".' description="Import a Java class by its simple name" toReformat="false" toShortenFQNames="false">
+    <template name="importjava" value='import $V1$' description="Import a Java class by its simple name" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"java.util.ArrayList"' alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="binding" value="def $V1$${2:: $V3$} := $V4$." description="Declare an immutable binding" toReformat="false" toShortenFQNames="false">
+    <template name="binding" value="def $V1$${2:: $V3$} := $V4$" description="Declare an immutable binding" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
         <variable name="V4" expression="" defaultValue='"expression"' alwaysStopAt="true"/>
@@ -22,7 +22,7 @@
         </context>
     </template>
 
-    <template name="function" value="def $V1$($V2$: $V3$) =&gt;&#10;    $V4$.&#10;end" description="Declare a function; its last expression is the result" toReformat="false" toShortenFQNames="false">
+    <template name="function" value="def $V1$($V2$: $V3$) =&gt;&#10;    $V4$&#10;end" description="Declare a function; its last expression is the result" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"name"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
@@ -32,7 +32,7 @@
         </context>
     </template>
 
-    <template name="privateclass" value="private class $V1$&#10;    def $V2$: $V3$ := $V4$.&#10;end" description="A class only this file can use; classes are public by default" toReformat="false" toShortenFQNames="false">
+    <template name="privateclass" value="private class $V1$&#10;    def $V2$: $V3$ := $V4$&#10;end" description="A class only this file can use; classes are public by default" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Helper"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
@@ -42,7 +42,7 @@
         </context>
     </template>
 
-    <template name="define" value="define $V1$($V2$: $V3$) =&gt;&#10;    $V4$.&#10;end" description="Declare a function called with positional arguments, Java style: name(1, 2)" toReformat="false" toShortenFQNames="false">
+    <template name="define" value="define $V1$($V2$: $V3$) =&gt;&#10;    $V4$&#10;end" description="Declare a function, Java style; call it name(1, 2) or name(a: 1, b: 2)" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"name"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
@@ -52,14 +52,14 @@
         </context>
     </template>
 
-    <template name="main" value="def main() =&gt;&#10;    $V1$.&#10;end" description="Declare the program entry function" toReformat="false" toShortenFQNames="false">
+    <template name="main" value="def main() =&gt;&#10;    $V1$&#10;end" description="Declare the program entry function" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"expression"' alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="class" value="class $V1$&#10;    key($V2$).&#10;    def $V2$: $V3$.&#10;    def $V4$: $V5$ := $V6$.&#10;end" description="Declare a class; when every field is storable its instances are facts stored in TidesDB" toReformat="false" toShortenFQNames="false">
+    <template name="class" value="class $V1$&#10;    key($V2$)&#10;    def $V2$: $V3$&#10;    def $V4$: $V5$ := $V6$&#10;end" description="Declare a class; when every field is storable its instances are facts stored in TidesDB" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Entity"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"String"' alwaysStopAt="true"/>
@@ -71,7 +71,7 @@
         </context>
     </template>
 
-    <template name="subclass" value="class $V1$ extends $V2$&#10;    def $V3$: $V4$.&#10;end" description="Declare a class with a superclass" toReformat="false" toShortenFQNames="false">
+    <template name="subclass" value="class $V1$ extends $V2$&#10;    def $V3$: $V4$&#10;end" description="Declare a class with a superclass" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Student"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"Person"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"grade"' alwaysStopAt="true"/>
@@ -81,7 +81,7 @@
         </context>
     </template>
 
-    <template name="staticclass" value="static class $V1$&#10;    def $V2$: $V3$ := $V4$.&#10;&#10;    def $V5$($V6$: $V3$) =&gt;&#10;        this.$V2$ := this.$V2$ + $V6$.&#10;        this.$V2$.&#10;    end&#10;end" description="Declare a class with class-level methods and shared fields; it is never instantiated" toReformat="false" toShortenFQNames="false">
+    <template name="staticclass" value="static class $V1$&#10;    def $V2$: $V3$ := $V4$&#10;&#10;    def $V5$($V6$: $V3$) =&gt;&#10;        this.$V2$ := this.$V2$ + $V6$&#10;        this.$V2$&#10;    end&#10;end" description="Declare a class with class-level methods and shared fields; it is never instantiated" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Tally"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"total"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
@@ -93,7 +93,7 @@
         </context>
     </template>
 
-    <template name="constructor" value="def $V1$($V2$: $V3$) =&gt;&#10;    this.$V2$ := $V2$.&#10;    this.save().&#10;end" description="A class's own constructor: a method named like the class" toReformat="false" toShortenFQNames="false">
+    <template name="constructor" value="def $V1$($V2$: $V3$) =&gt;&#10;    this.$V2$ := $V2$&#10;    this.save()&#10;end" description="A class's own constructor: a method named like the class" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Entity"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"String"' alwaysStopAt="true"/>
@@ -102,7 +102,7 @@
         </context>
     </template>
 
-    <template name="new" value="new $V1$($V2$: $V3$)." description="Create an instance; a fact class writes the fact to TidesDB" toReformat="false" toShortenFQNames="false">
+    <template name="new" value="new $V1$($V2$: $V3$)" description="Create an instance; a fact class writes the fact to TidesDB" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Entity"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"\"e1\""' alwaysStopAt="true"/>
@@ -111,7 +111,7 @@
         </context>
     </template>
 
-    <template name="mixfix" value="@mixfix(pattern: '{$V1$: $V2$} $V3$ {$V4$: $V2$}')&#10;def $V5$() =&gt;&#10;    $V6$.&#10;end" description="Declare an operator: the typed captures of the pattern are the parameters" toReformat="false" toShortenFQNames="false">
+    <template name="mixfix" value="@mixfix(pattern: '{$V1$: $V2$} $V3$ {$V4$: $V2$}')&#10;def $V5$() =&gt;&#10;    $V6$&#10;end" description="Declare an operator: the typed captures of the pattern are the parameters" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"left"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"combine"' alwaysStopAt="true"/>
@@ -123,7 +123,7 @@
         </context>
     </template>
 
-    <template name="override" value="@override&#10;def $V1$($V2$: $V3$) =&gt;&#10;    $V4$.&#10;end" description="Override a method of the superclass" toReformat="false" toShortenFQNames="false">
+    <template name="override" value="@override&#10;def $V1$($V2$: $V3$) =&gt;&#10;    $V4$&#10;end" description="Override a method of the superclass" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"name"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
@@ -133,7 +133,7 @@
         </context>
     </template>
 
-    <template name="condition" value="$V1$ = $V2$ then $V3$ else $V4$." description="Create a conditional expression" toReformat="false" toShortenFQNames="false">
+    <template name="condition" value="$V1$ = $V2$ then $V3$ else $V4$ end" description="Create a conditional expression" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"left"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"right"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"value"' alwaysStopAt="true"/>
@@ -143,7 +143,7 @@
         </context>
     </template>
 
-    <template name="for" value="for $V1$ in $V2$ then&#10;    $V3$.&#10;end" description="Iterate a list, a range or a selection of facts" toReformat="false" toShortenFQNames="false">
+    <template name="for" value="for $V1$ in $V2$ then&#10;    $V3$&#10;end" description="Iterate a list, a range or a selection of facts" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"item"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"values"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"expression"' alwaysStopAt="true"/>
@@ -152,7 +152,7 @@
         </context>
     </template>
 
-    <template name="while" value="while $V1$ then&#10;    $V2$.&#10;end" description="Repeat while a Boolean condition is true" toReformat="false" toShortenFQNames="false">
+    <template name="while" value="while $V1$ then&#10;    $V2$&#10;end" description="Repeat while a Boolean condition is true" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"condition"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"expression"' alwaysStopAt="true"/>
         <context>
@@ -160,7 +160,7 @@
         </context>
     </template>
 
-    <template name="switch" value="switch $V1$&#10;case $V2$ then&#10;    $V3$.&#10;    break.&#10;default then&#10;    $V4$.&#10;end" description="A switch block: a case falls through to the next until break" toReformat="false" toShortenFQNames="false">
+    <template name="switch" value="switch $V1$&#10;case $V2$ then&#10;    $V3$&#10;    break&#10;default then&#10;    $V4$&#10;end" description="A switch block: a case falls through to the next until break" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"expected"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"expression"' alwaysStopAt="true"/>
@@ -170,7 +170,7 @@
         </context>
     </template>
 
-    <template name="try" value="try&#10;    $V1$.&#10;catch $V2$ then&#10;    $V3$.&#10;end" description="Catch an exception: error is (kind: Atom, message: String)" toReformat="false" toShortenFQNames="false">
+    <template name="try" value="try&#10;    $V1$&#10;catch $V2$ then&#10;    $V3$&#10;end" description="Catch an exception: error is (kind: Atom, message: String)" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"expression"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"error"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"error.message"' alwaysStopAt="true"/>
@@ -179,7 +179,7 @@
         </context>
     </template>
 
-    <template name="throw" value="throw(kind: $V1$, message: $V2$)." description="Raise an exception; its type is Nothing" toReformat="false" toShortenFQNames="false">
+    <template name="throw" value="throw(kind: $V1$, message: $V2$)" description="Raise an exception; its type is Nothing" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"runtime"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"\"failed\""' alwaysStopAt="true"/>
         <context>
@@ -187,7 +187,7 @@
         </context>
     </template>
 
-    <template name="query" value="$V1$().where($V2$: $V3$).all()." description="Select facts of a class and read them" toReformat="false" toShortenFQNames="false">
+    <template name="query" value="$V1$().where($V2$: $V3$).all()" description="Select facts of a class and read them" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Employee"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"active"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"true"' alwaysStopAt="true"/>
@@ -196,7 +196,7 @@
         </context>
     </template>
 
-    <template name="insert" value="$V1$().insert(values: {$V2$: $V3$})." description="Store a new fact; an error if the key exists" toReformat="false" toShortenFQNames="false">
+    <template name="insert" value="$V1$().insert(values: {$V2$: $V3$})" description="Store a new fact; an error if the key exists" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Employee"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"\"e1\""' alwaysStopAt="true"/>
@@ -205,7 +205,7 @@
         </context>
     </template>
 
-    <template name="link" value="Link(&#10;    from: $V1$.$V2$,&#10;    to: $V3$.$V2$,&#10;    properties: {$V4$: $V5$}&#10;)." description="Store an edge between two stored facts" toReformat="false" toShortenFQNames="false">
+    <template name="link" value="Link(&#10;    from: $V1$.$V2$,&#10;    to: $V3$.$V2$,&#10;    properties: {$V4$: $V5$}&#10;)" description="Store an edge between two stored facts" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"left"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"right"' alwaysStopAt="true"/>
@@ -216,7 +216,7 @@
         </context>
     </template>
 
-    <template name="unlink" value="Unlink(&#10;    from: $V1$.$V2$,&#10;    to: $V3$.$V2$,&#10;    properties: {$V4$: $V5$}&#10;)." description="Remove a stored link" toReformat="false" toShortenFQNames="false">
+    <template name="unlink" value="Unlink(&#10;    from: $V1$.$V2$,&#10;    to: $V3$.$V2$,&#10;    properties: {$V4$: $V5$}&#10;)" description="Remove a stored link" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"left"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"right"' alwaysStopAt="true"/>
@@ -227,7 +227,7 @@
         </context>
     </template>
 
-    <template name="join" value="$V1$().join(to: $V2$, type: $V3$, properties: {$V4$: $V5$})." description="Walk links to facts of another class; returns typed rows (left, right, properties, depth)" toReformat="false" toShortenFQNames="false">
+    <template name="join" value="$V1$().join(to: $V2$, type: $V3$, properties: {$V4$: $V5$})" description="Walk links to facts of another class; returns typed rows (left, right, properties, depth)" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Employee"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"Department"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"forward"' alwaysStopAt="true"/>
@@ -238,14 +238,14 @@
         </context>
     </template>
 
-    <template name="isatom" value="is_atom($V1$)." description="Test whether a value is a data atom" toReformat="false" toShortenFQNames="false">
+    <template name="isatom" value="is_atom($V1$)" description="Test whether a value is a data atom" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="type" value="type($V1$)." description="Return the type name of a value" toReformat="false" toShortenFQNames="false">
+    <template name="type" value="type($V1$)" description="Return the type name of a value" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>

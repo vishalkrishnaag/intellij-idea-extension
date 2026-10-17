@@ -109,30 +109,37 @@ public final class FelidaeColorSettingsPage
     public @NotNull String getDemoText() {
         return """
                 # Felidae syntax-color preview
+                package com.acme
 
-                import "employees.fx".
+                import java.util.ArrayList
+                import "employees.fx"
 
                 class Employee
-                    key(id).
-                    def id: String.
-                    def name: String.
-                    def age: Integer := 0.
+                    key(id)
+                    def id: String
+                    def name: String
+                    def age: Integer := 0
 
                     def label() =>
-                        this.name + " (" + this.age + ")".
+                        this.name + " (" + this.age + ")"
                     end
                 end
 
-                new Employee(id: "e1", name: "Ada", age: 36).
+                new Employee(id: "e1", name: "Ada", age: 36)
 
                 @mixfix(pattern: '{left: Integer} combine {right: Integer}')
                 def combineNumbers() =>
-                    left + right.
+                    left + right
                 end
 
                 def main() =>
-                    def adults := Employee().where(age: 36).all().
-                    adults.len() > 0 then active else throw(kind: none, message: "nobody").
+                    def adults := Employee().where(age: 36).all()
+                    print "adults", adults.len()
+                    adults.len() > 0 then
+                        active
+                    else
+                        throw(kind: none, message: "nobody")
+                    end
                 end
                 """;
     }

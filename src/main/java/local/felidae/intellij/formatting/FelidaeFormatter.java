@@ -101,16 +101,17 @@ public final class FelidaeFormatter {
     }
 
     private static final Pattern BRANCH =
-            Pattern.compile("(?:else\\b|catch\\b.*\\bthen|case\\b.*\\bthen|default\\s+then)\\s*");
+            Pattern.compile("(?:else\\b(?:.*\\bthen)?|catch\\b.*\\bthen|case\\b.*\\bthen|default\\s+then)\\s*");
     private static final List<Pattern> OPENS_BLOCK = List.of(
-            Pattern.compile("\\s*class\\s+[A-Za-z_][A-Za-z0-9_.]*(?:\\s+extends?\\b.*)?\\s*"),
-            Pattern.compile("\\s*def\\s+[A-Za-z_][A-Za-z0-9_.]*\\s*\\([^)]*\\)\\s*=>\\s*"),
-            Pattern.compile("\\s*(?:for\\b.*\\bthen|while\\b.*\\bthen|switch\\b.*|try)\\s*"));
+            Pattern.compile("\\s*(?:private\\s+)?(?:static\\s+)?class\\s+[A-Za-z_][A-Za-z0-9_.]*(?:\\s+extends?\\b.*)?\\s*"),
+            Pattern.compile("\\s*(?:def|define)\\s+[A-Za-z_][A-Za-z0-9_.]*\\s*\\([^)]*\\)\\s*=>\\s*"),
+            Pattern.compile("\\s*(?:for\\b.*\\bthen|while\\b.*\\bthen|switch\\b.*|try)\\s*"),
+            Pattern.compile("\\s*(?!(?:else|catch|case|default)\\b)\\S.*\\bthen\\s*"));
 
     /** Only constructs that own an explicit {@code end} open a frame: class,
      * {@code def ... =>}, {@code for}/{@code while ... then}, {@code switch}
-     * and {@code try}. A conditional {@code then} expression has no
-     * {@code end}, and else/catch/case/default continue the surrounding
+     * and {@code try}, and a conditional whose branches start on the next line
+     * ({@code x > 0 then}); else/catch/case/default continue the surrounding
      * frame instead of opening another one. */
     private static boolean opensBlock(String masked) {
         return OPENS_BLOCK.stream().anyMatch(pattern -> pattern.matcher(masked).matches());
