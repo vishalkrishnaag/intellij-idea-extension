@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "local.felidae"
-version = "0.0.1"
+version = "0.1.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -53,11 +53,12 @@ intellijPlatform {
     }
 }
 
-// Keeps the bundled stdlib hover-doc content in sync with the repo-root
-// docs/builtin-docs.json, which is the single source of truth shared with
-// the VS Code extension (see vs-code-extension/scripts/generate-builtin-docs.js).
+// Keeps the bundled hover-doc and completion content in sync with docs/builtin-docs.json of the Felidae
+// repository (this plugin is its submodule dependencies/intellij-idea-extension), the single source of truth
+// shared with the VS Code extension (see ../vs-code-extension/scripts/generate-builtin-docs.js). FELIDAE_DOCS
+// names another copy when the plugin is built outside the repository.
 tasks.register("generateBuiltinDocs") {
-    val source = file("$projectDir/../docs/builtin-docs.json")
+    val source = file(System.getenv("FELIDAE_DOCS") ?: "$projectDir/../../docs/builtin-docs.json")
     val dest = file("$projectDir/src/main/resources/builtin-docs.json")
     inputs.file(source)
     outputs.file(dest)
@@ -67,46 +68,6 @@ tasks.register("generateBuiltinDocs") {
     }
 }
 
-// Bundles the ranking models trained offline by the repo-root ml/ pipeline
-// (see ml/README.md). Only the models ship - the plugin scores them with
-// FelidaeGbdt and bundles no ML library. Absent models simply disable ranking.
-tasks.register("generateMlModels") {
-    val sourceDir = file("$projectDir/../ml/models")
-    val destDir = file("$projectDir/src/main/resources/models")
-    val modelFiles = listOf("completion-rank.json", "next-param.json", "corpus-index.json")
-
-    // Not tracked, and not a Copy task: on a OneDrive-backed checkout the
-    // model files can be cloud placeholders rather than regular files, and
-    // Gradle fails outright trying to snapshot those ("not a regular file").
-    // Reading them through a normal stream materialises them on demand, and
-    // this is three small files - incremental tracking buys nothing.
-    doNotTrackState("model files may be cloud placeholders that cannot be snapshotted")
-
-    doLast {
-        if (!sourceDir.isDirectory) {
-            logger.lifecycle(
-                "generateMlModels: ${sourceDir.path} not found; ranking stays disabled. " +
-                    "Run `npm install && npm run train` in ml/ to produce it."
-            )
-            return@doLast
-        }
-        destDir.mkdirs()
-        var copied = 0
-        for (name in modelFiles) {
-            val source = File(sourceDir, name)
-            if (!source.exists()) {
-                logger.lifecycle("generateMlModels: missing $name, skipping")
-                continue
-            }
-            source.inputStream().use { input ->
-                File(destDir, name).outputStream().use { output -> input.copyTo(output) }
-            }
-            copied++
-        }
-        logger.lifecycle("generateMlModels: copied $copied/${modelFiles.size} model files")
-    }
-}
-
 tasks.named("processResources") {
-    dependsOn("generateBuiltinDocs", "generateMlModels")
+    dependsOn("generateBuiltinDocs")
 }

@@ -13,20 +13,11 @@ import com.intellij.openapi.util.SystemInfo;
 
 public final class FelidaeExecutableResolver {
 
-    public static final String VISUALIZER_ENVIRONMENT_VARIABLE =
-            "CELIDAE_PATH";
-
     public static final String INTERPRETER_ENVIRONMENT_VARIABLE =
             "FELIDAE_PATH";
 
-    private static final String WINDOWS_VISUALIZER_EXECUTABLE =
-            "celidae.exe";
-
-    private static final String UNIX_VISUALIZER_EXECUTABLE =
-            "celidae";
-
     private static final String WINDOWS_INTERPRETER_EXECUTABLE =
-            "felidae.exe";
+            "felidae.bat";
 
     private static final String UNIX_INTERPRETER_EXECUTABLE =
             "felidae";
@@ -37,29 +28,14 @@ public final class FelidaeExecutableResolver {
      */
     public static final String INTERPRETER_NOT_FOUND_MESSAGE =
             "Felidae interpreter was not found.\n\n" +
-                    "Looked in <project>/dist/bin, build/release, build/debug (and the platform " +
-                    "build folders such as build/debug/x64/Debug) and on PATH.\n\n" +
+                    "Looked in <project>/build/java/cli/install/felidae/bin (./gradlew installDist in the Felidae " +
+                    "repository), dist/bin and release/bin, and on PATH.\n\n" +
                     "Set the interpreter path in Settings | Tools | Felidae, or the " +
                     "FELIDAE_PATH environment variable.\n";
 
     private FelidaeExecutableResolver() {
         throw new AssertionError(
                 "FelidaeExecutableResolver cannot be instantiated."
-        );
-    }
-
-    public static @Nullable Path resolveVisualizer(
-            @NotNull Project project
-    ) {
-        Path configured = FelidaeSettingsState.getInstance(project).resolvedCelidaePath();
-        if (configured != null) {
-            return configured;
-        }
-        return resolve(
-                project,
-                VISUALIZER_ENVIRONMENT_VARIABLE,
-                WINDOWS_VISUALIZER_EXECUTABLE,
-                UNIX_VISUALIZER_EXECUTABLE
         );
     }
 
@@ -107,21 +83,12 @@ public final class FelidaeExecutableResolver {
         }
 
         String executable = SystemInfo.isWindows ? windowsExecutable : unixExecutable;
-        String nativeStage = SystemInfo.isWindows ? "build/windows-x64/release/dist/bin" :
-                SystemInfo.isMac ? "build/macos-" +
-                        (System.getProperty("os.arch").equals("aarch64") ? "arm64" : "x86_64") +
-                        "/release/dist/bin" : "build/release/dist/bin";
+        // felidae is a launcher script written by Gradle's installDist; a packaged one has the same bin/ layout.
         List<Path> candidates = List.of(
+                projectRoot.resolve("build/java/cli/install/felidae/bin").resolve(executable),
                 projectRoot.resolve("dist/bin").resolve(executable),
                 projectRoot.resolve("release/bin").resolve(executable),
-                projectRoot.resolve(nativeStage).resolve(executable),
-                projectRoot.resolve("build/release/dist/bin").resolve(executable),
-                projectRoot.resolve("build/release").resolve(executable),
-                // Development builds, after the release ones: a release build is preferred.
-                projectRoot.resolve("build/debug/x64/Debug").resolve(executable),
-                projectRoot.resolve("build/debug").resolve(executable),
-                projectRoot.resolve("bin").resolve(executable),
-                projectRoot.resolve(executable));
+                projectRoot.resolve("bin").resolve(executable));
 
         for (Path candidate : candidates) {
             Path normalized = candidate

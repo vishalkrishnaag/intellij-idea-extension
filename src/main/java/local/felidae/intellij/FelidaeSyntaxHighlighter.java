@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  * Lightweight lexical highlighter for Felidae source files.
  *
  * This lexer is intentionally limited to visual token classification.
- * Full parsing and validation are performed by Celidae through
+ * Full parsing and validation are performed by felidae through
  * {@link FelidaeExternalAnnotator}.
  */
 public final class FelidaeSyntaxHighlighter
@@ -44,6 +44,9 @@ public final class FelidaeSyntaxHighlighter
 
     public static final IElementType FIELD =
             new FelidaeTokenType("FIELD");
+
+    public static final IElementType TYPE =
+            new FelidaeTokenType("TYPE");
 
     public static final IElementType LIBRARY =
             new FelidaeTokenType("LIBRARY");
@@ -174,6 +177,9 @@ public final class FelidaeSyntaxHighlighter
     private static final TextAttributesKey[] FIELD_KEYS =
             pack(FelidaeTextAttributes.FIELD);
 
+    private static final TextAttributesKey[] TYPE_KEYS =
+            pack(FelidaeTextAttributes.TYPE);
+
     private static final TextAttributesKey[] LIBRARY_KEYS =
             pack(FelidaeTextAttributes.LIBRARY);
 
@@ -267,6 +273,10 @@ public final class FelidaeSyntaxHighlighter
             return FIELD_KEYS;
         }
 
+        if (tokenType == TYPE) {
+            return TYPE_KEYS;
+        }
+
         if (tokenType == LIBRARY) {
             return LIBRARY_KEYS;
         }
@@ -326,14 +336,13 @@ public final class FelidaeSyntaxHighlighter
             extends LexerBase {
 
         private static final Set<String> KEYWORDS = Set.of(
-                "def",
+                "defprivate",
                 "import",
                 "class",
-                "extend",
+                "static",
                 "extends",
                 "index",
-                "where",
-                "if",
+                "key",
                 "else",
                 "then",
                 "for",
@@ -349,11 +358,19 @@ public final class FelidaeSyntaxHighlighter
                 "new",
                 "this",
                 "super",
-                "lambda",
+                "and",
+                "or",
+                "not",
                 "end",
                 "true",
                 "false",
                 "nil"
+        );
+
+        /** The types of the language; they are JVM object types, so they are spelled with a capital. */
+        private static final Set<String> TYPE_NAMES = Set.of(
+                "Integer", "Long", "Float", "Double", "Character", "String", "Boolean", "Atom", "Any", "Object",
+                "Nothing", "List", "Map", "Optional", "Pair"
         );
 
         private CharSequence buffer = "";
@@ -534,8 +551,6 @@ public final class FelidaeSyntaxHighlighter
                 Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\([^)]*\\)\\s*=>.*");
         private static final Pattern DEF_BINDING_REST =
                 Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_]*\\s*:.*");
-        private static final Pattern DEF_FACT_REST =
-                Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*");
 
         /**
          * {@code def} declares a function ({@code def f(...) =>}), a binding or
@@ -552,7 +567,7 @@ public final class FelidaeSyntaxHighlighter
             String rest = buffer.subSequence(tokenEnd, lineEnd).toString();
             if (DEF_FUNCTION_REST.matcher(rest).matches()) return DEF_FUNCTION;
             if (DEF_BINDING_REST.matcher(rest).matches()) return DEF_BINDING;
-            if (DEF_FACT_REST.matcher(rest).matches()) return DEF_FACT;
+            // def Name(...) without => is no longer a declaration (a fact is `new Name(...)`).
             return KEYWORD;
         }
 
@@ -641,7 +656,7 @@ public final class FelidaeSyntaxHighlighter
                     .subSequence(tokenStart, tokenEnd)
                     .toString();
 
-            if (text.equals("def")) {
+            if (text.equals("def") || text.equals("defprivate")) {
                 tokenType = classifyDef();
                 return;
             }
@@ -653,6 +668,11 @@ public final class FelidaeSyntaxHighlighter
 
             if (KEYWORDS.contains(text)) {
                 tokenType = KEYWORD;
+                return;
+            }
+
+            if (TYPE_NAMES.contains(text)) {
+                tokenType = TYPE;
                 return;
             }
 

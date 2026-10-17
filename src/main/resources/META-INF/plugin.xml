@@ -8,12 +8,14 @@
 
     <description>
         <![CDATA[
-        Felidae language support for .fx files, backed by Celidae diagnostics,
-        runtime checks, run actions, and data graph inspection.
+        Felidae language support for .fx files: highlighting, completion, folding, formatting, diagnostics from
+        the felidae compiler (felidae --check-json), Run and Debug of the compiled program on the JVM, and a
+        query action. Needs the felidae command (./gradlew installDist in the Felidae repository).
         ]]>
     </description>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="felidae-java.xml">com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileType
@@ -97,7 +99,7 @@
                 id="Felidae.CheckFile"
                 class="local.felidae.intellij.actions.FelidaeCheckAction"
                 text="Check Felidae File"
-                description="Check the current Felidae file using Celidae"
+                description="Check the current Felidae file with felidae --check-json"
                 icon="/icons/felidaeCheck.svg">
 
             <add-to-group
@@ -113,7 +115,7 @@
                 id="Felidae.RunFile"
                 class="local.felidae.intellij.actions.FelidaeRunAction"
                 text="Run Felidae File"
-                description="Run the current Felidae file using the interpreter"
+                description="Compile and run the current Felidae file"
                 icon="/icons/felidaeRun.svg">
 
             <add-to-group
@@ -133,10 +135,32 @@
         </action>
 
         <action
+                id="Felidae.DebugFile"
+                class="local.felidae.intellij.actions.FelidaeDebugAction"
+                text="Debug Felidae File"
+                description="Compile the current Felidae file and debug it on the JVM"
+                icon="AllIcons.Actions.StartDebugger">
+
+            <add-to-group
+                    group-id="RunMenu"
+                    anchor="last"/>
+            <add-to-group
+                    group-id="ProjectViewPopupMenu"
+                    anchor="last"/>
+            <add-to-group
+                    group-id="EditorPopupMenu"
+                    anchor="last"/>
+
+            <keyboard-shortcut
+                    keymap="$default"
+                    first-keystroke="ctrl alt F11"/>
+        </action>
+
+        <action
                 id="Felidae.RunQuery"
                 class="local.felidae.intellij.actions.FelidaeRunQueryAction"
                 text="Run Felidae Query..."
-                description="Prompt for a Felidae query and run it against the current file"
+                description="Prompt for an expression and evaluate it against the current file"
                 icon="/icons/felidaeRun.svg">
 
             <add-to-group
@@ -149,25 +173,6 @@
             <keyboard-shortcut
                     keymap="$default"
                     first-keystroke="ctrl alt F12"/>
-        </action>
-
-        <action
-                id="Felidae.VisualizeFile"
-                class="local.felidae.intellij.actions.FelidaeVisualizeAction"
-                text="Visualize Felidae Data Graph"
-                description="Inspect the current Felidae file using Celidae visual analytics"
-                icon="/icons/felidaeAction.svg">
-
-            <add-to-group
-                    group-id="ToolsMenu"
-                    anchor="last"/>
-            <add-to-group
-                    group-id="EditorPopupMenu"
-                    anchor="last"/>
-
-            <keyboard-shortcut
-                    keymap="$default"
-                    first-keystroke="ctrl alt F11"/>
         </action>
 
         <action

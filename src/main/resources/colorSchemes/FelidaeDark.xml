@@ -105,6 +105,11 @@
                 <option name="FOREGROUND" value="f7c948"/>
             </value>
         </option>
+        <option name="FELIDAE_TYPE">
+            <value>
+                <option name="FOREGROUND" value="4ec9b0"/>
+            </value>
+        </option>
         <option name="FELIDAE_LIBRARY">
             <value>
                 <option name="FOREGROUND" value="ffb86b"/>

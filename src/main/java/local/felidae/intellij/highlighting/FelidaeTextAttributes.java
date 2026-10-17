@@ -103,6 +103,12 @@ public final class FelidaeTextAttributes {
                     DefaultLanguageHighlighterColors.INSTANCE_FIELD
             );
 
+    public static final TextAttributesKey TYPE =
+            key(
+                    "FELIDAE_TYPE",
+                    DefaultLanguageHighlighterColors.CLASS_NAME
+            );
+
     public static final TextAttributesKey LIBRARY =
             key(
                     "FELIDAE_LIBRARY",

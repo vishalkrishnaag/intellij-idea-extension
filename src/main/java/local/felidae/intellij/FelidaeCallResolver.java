@@ -19,9 +19,9 @@ import java.util.regex.Pattern;
  * <ol>
  *   <li>{@link FelidaeBuiltinDocs} - parameters derived at build time from the
  *       documented example (see vs-code-extension/scripts/generate-builtin-docs.js,
- *       which produces the shared builtin-docs.json both IDEs bundle).</li>
+ *       which produces the shared docs/builtin-docs.json both IDEs bundle).</li>
  *   <li>A text scan of the file's own declarations, which additionally recovers
- *       the type annotation a head writes (`name: string`).</li>
+ *       the type annotation a head writes (`name: String`).</li>
  * </ol>
  *
  * <p>Mirrors {@code resolveCall} / {@code collectHeadParams} in
@@ -30,24 +30,17 @@ import java.util.regex.Pattern;
 public final class FelidaeCallResolver {
 
     /**
-     * Declaration head: {@code Name(args)}, {@code Name extend Parent(args)},
-     * optionally followed by {@code =>} (method) or {@code .} (dot-terminated
-     * fact). Kept identical to DECLARATION_PATTERN in
+     * Declaration head: {@code def name(args) =>} or {@code defprivate name(args) =>}, the head of a function
+     * or, indented, of a class method. Kept identical to DECLARATION_PATTERN in
      * vs-code-extension/src/extension.ts.
      *
-     * <p>Two properties matter. The argument list uses bounded nesting rather
-     * than a lazy {@code [\s\S]*?}: the lazy form runs across newlines, so a
-     * dotless fact - which has no {@code =>} or {@code .} to stop at - made a
-     * single match swallow every declaration up to the next terminated one.
-     * And it anchors at column 0, because Felidae declarations are always top
-     * level; allowing leading whitespace matched indented *calls* such as
-     * {@code return (}, {@code system.print(...)} and {@code instanceof(...)}
-     * as if they were declarations.
+     * <p>The argument list uses bounded nesting rather than a lazy {@code [\s\S]*?}, which would run across
+     * newlines. Leading blanks are allowed so the methods of a class are found; a call is never preceded by
+     * {@code def}, so calls are not mistaken for declarations.
      */
     private static final Pattern DECLARATION = Pattern.compile(
-            "(?m)^([A-Za-z_][A-Za-z0-9_:.]*)"
-                    + "(?:[ \\t]+extend[ \\t]+([A-Za-z_][A-Za-z0-9_]*))?"
-                    + "[ \\t]*\\(((?:[^()]|\\((?:[^()]|\\([^()]*\\))*\\))*)\\)[ \\t]*(=>|\\.|$)");
+            "(?m)^[ \\t]*(?:def|defprivate)[ \\t]+([A-Za-z_][A-Za-z0-9_:.]*)"
+                    + "[ \\t]*\\(((?:[^()]|\\((?:[^()]|\\([^()]*\\))*\\))*)\\)[ \\t]*(=>)");
 
     /** Leading `name:` of one argument segment; `(?!=)` keeps `:=` out. */
     private static final Pattern PARAM_HEAD =
@@ -70,11 +63,7 @@ public final class FelidaeCallResolver {
      * only need to locate a single symbol (Go to Declaration) rather than
      * enumerate every declaration.
      *
-     * <p>The optional {@code extend Parent} clause is the part that is easy to
-     * forget and silently breaks navigation for every inheriting fact - e.g.
-     * {@code MortalBeing extend LivingThing(...)}, where the name is not
-     * followed directly by {@code (}. Sharing this builder is what keeps that
-     * from drifting apart from {@link #DECLARATION} again.
+     * <p>A function is {@code def name(...)}, a class is {@code class Name} (or {@code static class Name}).
      */
     public static @NotNull Pattern declarationPatternFor(@NotNull String name) {
         String[] parts = name.replace('.', ':').split(":");
@@ -84,12 +73,11 @@ public final class FelidaeCallResolver {
             qualified.append(Pattern.quote(parts[i]));
         }
         return Pattern.compile(
-                "(?m)^(?:" + qualified
-                        + "(?:\\s+extend\\s+[A-Za-z_][A-Za-z0-9_]*)?\\s*\\("
-                        + "|class\\s+" + qualified + "\\b)");
+                "(?m)^[ \\t]*(?:(?:def|defprivate)[ \\t]+" + qualified + "[ \\t]*\\("
+                        + "|(?:static[ \\t]+)?class[ \\t]+" + qualified + "\\b)");
     }
 
-    /** One top-level declaration found in a file's text. */
+    /** One function declaration found in a file's text. */
     public record Declaration(
             @NotNull String name,
             @NotNull String argsText,
@@ -97,7 +85,7 @@ public final class FelidaeCallResolver {
     }
 
     /**
-     * Every method/fact declaration in {@code fileText}. Shared so callers do
+     * Every function declaration in {@code fileText}. Shared so callers do
      * not each maintain their own copy of the declaration pattern.
      */
     public static @NotNull List<Declaration> declarations(@NotNull String fileText) {
@@ -106,8 +94,8 @@ public final class FelidaeCallResolver {
         while (matcher.find()) {
             declarations.add(new Declaration(
                     matcher.group(1),
-                    matcher.group(3),
-                    "=>".equals(matcher.group(4))));
+                    matcher.group(2),
+                    true));
         }
         return declarations;
     }
@@ -139,11 +127,10 @@ public final class FelidaeCallResolver {
                     && !name.replace('.', ':').equals(normalized)) {
                 continue;
             }
-            boolean isMethod = "=>".equals(declaration.group(4));
             return new ResolvedCall(
                     name,
-                    collectHeadParams(declaration.group(3)),
-                    (isMethod ? "method " : "fact ") + name);
+                    collectHeadParams(declaration.group(2)),
+                    "function " + name);
         }
         return null;
     }

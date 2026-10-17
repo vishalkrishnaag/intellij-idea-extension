@@ -74,6 +74,10 @@ public final class FelidaeColorSettingsPage
                     FelidaeTextAttributes.FIELD
             ),
             new AttributesDescriptor(
+                    "Types",
+                    FelidaeTextAttributes.TYPE
+            ),
+            new AttributesDescriptor(
                     "Libraries",
                     FelidaeTextAttributes.LIBRARY
             ),
@@ -106,23 +110,30 @@ public final class FelidaeColorSettingsPage
         return """
                 # Felidae syntax-color preview
 
-                import "employees.fx"
+                import "employees.fx".
 
-                Employee(
-                    name: "Alice",
-                    age: 30,
-                    role: "Engineer"
-                )
+                class Employee
+                    key(id).
+                    def id: String.
+                    def name: String.
+                    def age: Integer := 0.
 
-                isEngineer(input: Employee) =>
-                    employee := input
-                    label := employee.name
-                        then system.print(value: system.result)
-                    where employee.role == "Engineer"
-                    return (
-                        name: employee.name,
-                        active: true
-                    )
+                    def label() =>
+                        this.name + " (" + this.age + ")".
+                    end
+                end
+
+                new Employee(id: "e1", name: "Ada", age: 36).
+
+                @mixfix(pattern: '{left: Integer} combine {right: Integer}')
+                defprivate combineNumbers() =>
+                    left + right.
+                end
+
+                def main() =>
+                    def adults := Employee().where(age: 36).all().
+                    adults.len() > 0 then active else throw(kind: none, message: "nobody").
+                end
                 """;
     }
 

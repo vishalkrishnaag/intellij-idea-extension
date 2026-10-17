@@ -1,0 +1,13 @@
+<idea-plugin>
+    <!-- Debugging a compiled Felidae program with IntelliJ's JVM debugger; loaded only where the Java plugin is. -->
+    <extensions defaultExtensionNs="com.intellij">
+        <xdebugger.breakpointType
+                implementation="local.felidae.intellij.debug.FelidaeLineBreakpointType"/>
+
+        <debugger.positionManagerFactory
+                implementation="local.felidae.intellij.debug.FelidaePositionManagerFactory"/>
+
+        <programRunner
+                implementation="local.felidae.intellij.run.FelidaeDebugRunner"/>
+    </extensions>
+</idea-plugin>

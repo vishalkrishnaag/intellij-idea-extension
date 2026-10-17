@@ -120,13 +120,23 @@ public final class FelidaeStructureViewFactory implements PsiStructureViewFactor
                         declaration.isMethod(),
                         declarationOffset(lines, lineStart, declaration.name())));
             }
+            Matcher classes = CLASS_HEAD.matcher(text);
+            while (classes.find()) {
+                children.add(new DeclarationElement(
+                        file, classes.group(1), classes.group(2) == null ? "" : " extends " + classes.group(2), false,
+                        classes.start()));
+            }
             return children.toArray(EMPTY_ARRAY);
         }
+
+        /** {@code class Name}, {@code static class Name} or {@code class Name extends Parent}. */
+        private static final java.util.regex.Pattern CLASS_HEAD = java.util.regex.Pattern.compile(
+                "(?m)^[ \\t]*(?:static[ \\t]+)?class[ \\t]+([A-Za-z_][A-Za-z0-9_.]*)(?:[ \\t]+extends[ \\t]+([A-Za-z_][A-Za-z0-9_.]*))?");
 
         private static int declarationOffset(String[] lines, int[] lineStart, String name) {
             Matcher matcher = FelidaeCallResolver.declarationPatternFor(name).matcher("");
             for (int i = 0; i < lines.length; i++) {
-                if (lines[i].isEmpty() || Character.isWhitespace(lines[i].charAt(0))) continue;
+                if (lines[i].isEmpty()) continue;
                 matcher.reset(lines[i]);
                 if (matcher.find()) return lineStart[i];
             }

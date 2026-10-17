@@ -14,6 +14,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import local.felidae.intellij.ui.FelidaeConsoleService;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -63,23 +64,63 @@ public final class FelidaeProcessRunner {
                 "Run Felidae",
                 interpreter,
                 sourceFile,
-                List.of()
+                List.of(),
+                false,
+                null
         );
     }
 
+    /** The name of the generated program a query runs from, beside the file it queries. */
+    public static final String QUERY_FILE = "cell_run.fx";
+
+    /**
+     * Runs {@code query} (an expression, ended with a period) against a file: a generated program beside it
+     * imports the file and its {@code main()} evaluates the query, so the query sees the file's functions,
+     * bindings and classes. The generated files are removed when the run ends.
+     */
     public static void runQuery(
             @NotNull Project project,
             @NotNull Path interpreter,
             @NotNull Path sourceFile,
             @NotNull String query
     ) {
+        Path directory = sourceFile.getParent();
+        String expression = query.endsWith(".") ? query : query + ".";
+        if (directory == null) {
+            FelidaeConsoleService.getInstance(project).printError("Cannot resolve the folder of " + sourceFile + "\n");
+            return;
+        }
+        Path queryFile = directory.resolve(QUERY_FILE);
+        try {
+            Files.writeString(queryFile, queryProgram(sourceFile.getFileName().toString(), expression), StandardCharsets.UTF_8);
+        } catch (java.io.IOException exception) {
+            FelidaeConsoleService.getInstance(project).printError("Cannot write " + queryFile + ": " + safeMessage(exception) + "\n");
+            return;
+        }
         run(
                 project,
                 "Run Felidae Query",
                 interpreter,
-                sourceFile,
-                List.of(query)
+                queryFile,
+                List.of(),
+                false,
+                () -> removeQueryFiles(queryFile)
         );
+    }
+
+    /** The generated program: import the file, run the expression in {@code main()}. */
+    public static @NotNull String queryProgram(@NotNull String fileName, @NotNull String expression) {
+        return "import \"" + fileName.replace("\\", "/").replace("\"", "\\\"") + "\".\n\ndef main() =>\n    "
+                + expression + "\nend\n";
+    }
+
+    private static void removeQueryFiles(@NotNull Path queryFile) {
+        try {
+            Files.deleteIfExists(queryFile);
+            Files.deleteIfExists(queryFile.resolveSibling(QUERY_FILE.replaceAll("\\.fx$", ".class")));
+        } catch (java.io.IOException ignored) {
+            // a leftover generated file is harmless: the next query overwrites it
+        }
     }
 
     public static void runChecker(
@@ -92,21 +133,9 @@ public final class FelidaeProcessRunner {
                 "Check Felidae",
                 debugger,
                 sourceFile,
-                List.of("--check-json")
-        );
-    }
-
-    public static void inspectGraph(
-            @NotNull Project project,
-            @NotNull Path celidae,
-            @NotNull Path sourceFile
-    ) {
-        run(
-                project,
-                "Visualize Felidae Data",
-                celidae,
-                sourceFile,
-                List.of("--inspect-graph")
+                List.of("--check-json"),
+                true,
+                null
         );
     }
 
@@ -115,7 +144,9 @@ public final class FelidaeProcessRunner {
             @NotNull String taskTitle,
             @NotNull Path executable,
             @NotNull Path sourceFile,
-            @NotNull List<String> trailingArguments
+            @NotNull List<String> options,
+            boolean optionsFirst,
+            @Nullable Runnable afterwards
     ) {
         FelidaeConsoleService consoleService =
                 FelidaeConsoleService.getInstance(project);
@@ -149,14 +180,19 @@ public final class FelidaeProcessRunner {
                 indicator.setIndeterminate(true);
                 indicator.setText(taskTitle);
 
-                execute(
-                        project,
-                        executable,
-                        sourceFile,
-                        trailingArguments,
-                        indicator,
-                        consoleService
-                );
+                try {
+                    execute(
+                            project,
+                            executable,
+                            sourceFile,
+                            options,
+                            optionsFirst,
+                            indicator,
+                            consoleService
+                    );
+                } finally {
+                    if (afterwards != null) afterwards.run();
+                }
             }
         }.queue();
     }
@@ -165,13 +201,17 @@ public final class FelidaeProcessRunner {
             @NotNull Project project,
             @NotNull Path executable,
             @NotNull Path sourceFile,
-            @NotNull List<String> trailingArguments,
+            @NotNull List<String> options,
+            boolean optionsFirst,
             @NotNull ProgressIndicator indicator,
             @NotNull FelidaeConsoleService consoleService
     ) {
+        // felidae [options] program.fx [arguments]: everything after the program belongs to the program, so the
+        // felidae options (--check-json) must come first.
         java.util.ArrayList<String> arguments = new java.util.ArrayList<>();
+        if (optionsFirst) arguments.addAll(options);
         arguments.add(sourceFile.toString());
-        arguments.addAll(trailingArguments);
+        if (!optionsFirst) arguments.addAll(options);
         GeneralCommandLine commandLine = shellCommand(executable, arguments);
 
         Path workingDirectory = sourceFile.getParent();
@@ -183,11 +223,11 @@ public final class FelidaeProcessRunner {
         }
 
         /*
-         * Interpreter:
-         *   felidae.exe file.fx
+         * Run:
+         *   felidae file.fx
          *
-         * Felidae tooling mode:
-         *   felidae.exe file.fx --check-json
+         * Tooling mode:
+         *   felidae --check-json file.fx
          */
 
         ApplicationManager.getApplication().invokeLater(() -> {

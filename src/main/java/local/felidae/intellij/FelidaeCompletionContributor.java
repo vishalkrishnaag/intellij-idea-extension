@@ -29,13 +29,12 @@ import java.util.regex.Pattern;
  */
 public final class FelidaeCompletionContributor extends CompletionContributor {
 
-    private static final Pattern DOT_TRIGGER = Pattern.compile("([A-Za-z_][A-Za-z0-9_]*)\\.$");
+    // `db.` (a library) or `Employee().` / `rows.` (a value or class: its members)
+    private static final Pattern DOT_TRIGGER = Pattern.compile("(?:([A-Za-z_][A-Za-z0-9_]*)|\\))\\.$");
     private static final Pattern BINDING = Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_]*)\\s*:=");
     private static final Pattern TRAILING_IDENTIFIER = Pattern.compile("([A-Za-z_][A-Za-z0-9_]*)$");
     private static final Pattern CLASS_DECLARATION =
-            Pattern.compile("(?m)^class\\s+([A-Za-z_][A-Za-z0-9_]*)\\b");
-    private static final Pattern LAMBDA_ITEM =
-            Pattern.compile("\\blambda\\s*\\([^,]+,\\s*([a-z_][A-Za-z0-9_]*)\\s*=>");
+            Pattern.compile("(?m)^[ \\t]*(?:static[ \\t]+)?class\\s+([A-Za-z_][A-Za-z0-9_.]*)\\b");
 
     public FelidaeCompletionContributor() {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), new CompletionProvider<>() {
@@ -58,7 +57,12 @@ public final class FelidaeCompletionContributor extends CompletionContributor {
 
                 Matcher dotMatch = DOT_TRIGGER.matcher(linePrefix);
                 if (dotMatch.find()) {
-                    addNamespaceCompletions(result, dotMatch.group(1));
+                    String base = dotMatch.group(1);
+                    if (base != null && FelidaeStdlibIndex.getLibraries().contains(base)) {
+                        addNamespaceCompletions(result, base);
+                    } else {
+                        addMemberCompletions(result);
+                    }
                     return;
                 }
 
@@ -156,6 +160,27 @@ public final class FelidaeCompletionContributor extends CompletionContributor {
         }
     }
 
+    /** After `.` on a value or a class: the members the documentation lists (count, where, join, ...). */
+    private static void addMemberCompletions(@NotNull CompletionResultSet result) {
+        for (Map.Entry<String, FelidaeBuiltinDocs.Entry> entry : FelidaeBuiltinDocs.entries()) {
+            if (entry.getKey().contains(":") || !isMember(entry.getKey())) continue;
+            FelidaeBuiltinDocs.Entry doc = entry.getValue();
+            result.addElement(
+                    LookupElementBuilder.create(entry.getKey())
+                            .withTypeText(doc.heading())
+                            .withTailText("  " + doc.description(), true)
+            );
+        }
+    }
+
+    /** The class-level and list members of the documentation, as opposed to free functions and constructs. */
+    private static boolean isMember(@NotNull String name) {
+        return switch (name) {
+            case "print", "range", "throw", "type", "is_atom", "Link", "Unlink" -> false;
+            default -> true;
+        };
+    }
+
     private static void addScopeCompletions(
             @NotNull CompletionResultSet result,
             @NotNull String text,
@@ -172,18 +197,11 @@ public final class FelidaeCompletionContributor extends CompletionContributor {
             kinds.putIfAbsent(name, FelidaeMlRanking.CandidateKind.LOCAL);
         }
 
-        Matcher lambdaItem = LAMBDA_ITEM.matcher(text);
-        while (lambdaItem.find()) {
-            String name = lambdaItem.group(1);
-            items.putIfAbsent(name, LookupElementBuilder.create(name).withTypeText("lambda item"));
-            kinds.putIfAbsent(name, FelidaeMlRanking.CandidateKind.PARAM);
-        }
-
         for (FelidaeCallResolver.Declaration declaration : FelidaeCallResolver.declarations(text)) {
             items.putIfAbsent(
                     declaration.name(),
                     LookupElementBuilder.create(declaration.name())
-                            .withTypeText(declaration.isMethod() ? "method" : "fact")
+                            .withTypeText("function")
             );
             kinds.putIfAbsent(
                     declaration.name(),

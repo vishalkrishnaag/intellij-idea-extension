@@ -1,0 +1,17 @@
+# Gradle and the IntelliJ Platform plugin: everything they generate
+.gradle/
+build/
+.intellijPlatform/
+.kotlin/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Sandbox IDE, logs and compiled classes
+*.log
+*.class
+/idea-sandbox/

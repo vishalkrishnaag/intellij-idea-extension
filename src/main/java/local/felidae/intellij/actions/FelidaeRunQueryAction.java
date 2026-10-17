@@ -17,7 +17,7 @@ public final class FelidaeRunQueryAction
         extends AnAction
         implements DumbAware {
 
-    private static final String DEFAULT_QUERY = "? Engineer(name: name)";
+    private static final String DEFAULT_QUERY = "Employee().count().";
 
     @Override
     public void update(
@@ -44,7 +44,7 @@ public final class FelidaeRunQueryAction
 
         String query = Messages.showInputDialog(
                 project,
-                "Felidae query to run against this program:",
+                "Expression to evaluate against this program (a call, a binding, Class().all()):",
                 "Run Felidae Query",
                 null,
                 DEFAULT_QUERY,

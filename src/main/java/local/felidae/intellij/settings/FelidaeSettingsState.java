@@ -13,11 +13,11 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 /**
- * Persists the per-project felidae/celidae executable path
- * overrides configured on the Felidae settings page. Checked first by
+ * Persists the per-project felidae executable path
+ * override configured on the Felidae settings page. Checked first by
  * FelidaeExecutableResolver, ahead of environment variables and
  * auto-detection, mirroring the VS Code extension's
- * felidae.interpreterPath/celidaePath settings.
+ * felidae.interpreterPath setting.
  */
 @Service(Service.Level.PROJECT)
 @State(name = "FelidaeSettings", storages = @Storage("felidae.xml"))
@@ -25,7 +25,6 @@ public final class FelidaeSettingsState implements PersistentStateComponent<Feli
 
     public static final class SettingsData {
         public String interpreterPath = "";
-        public String celidaePath = "";
     }
 
     private SettingsData data = new SettingsData();
@@ -57,20 +56,8 @@ public final class FelidaeSettingsState implements PersistentStateComponent<Feli
         data.interpreterPath = value;
     }
 
-    public @NotNull String getCelidaePath() {
-        return data.celidaePath;
-    }
-
-    public void setCelidaePath(@NotNull String value) {
-        data.celidaePath = value;
-    }
-
     public @Nullable Path resolvedInterpreterPath() {
         return resolved(data.interpreterPath);
-    }
-
-    public @Nullable Path resolvedCelidaePath() {
-        return resolved(data.celidaePath);
     }
 
     private @Nullable Path resolved(@Nullable String raw) {

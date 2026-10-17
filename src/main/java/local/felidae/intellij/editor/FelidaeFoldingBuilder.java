@@ -30,15 +30,12 @@ import java.util.regex.Pattern;
 public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements DumbAware {
 
     /**
-     * A line that starts a new top-level construct, ending the previous fold.
-     * The optional {@code extend Parent} clause must be allowed, or a fact
-     * written as {@code Child extend Parent(...)} is not seen as starting
-     * anything and a whole run of facts collapses into one region.
+     * A line that starts a new top-level construct, ending the previous fold: a declaration
+     * ({@code def}, {@code defprivate}, {@code class}, {@code static class}), an annotation, an import or a
+     * top-level {@code new}.
      */
     private static final Pattern TOP_LEVEL_START = Pattern.compile(
-            "^(?:[A-Za-z_][A-Za-z0-9_:.]*(?:[ \\t]+extend[ \\t]+[A-Za-z_][A-Za-z0-9_]*)?[ \\t]*\\("
-                    + "|import\\b"
-                    + "|[A-Za-z_][A-Za-z0-9_]*[ \\t]*:=)");
+            "^(?:(?:def|defprivate)\\b|(?:static[ \\t]+)?class\\b|import\\b|@|new\\b)");
 
     private static final Pattern COMMENT_LINE = Pattern.compile("^[ \\t]*#");
 
@@ -86,8 +83,8 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
             List<FoldingDescriptor> descriptors
     ) {
         Pattern opener = Pattern.compile(
-                "^\\s*(?:class\\b.*|(?:for|while|switch)\\b.*|try\\s*(?:#.*)?"
-                        + "|(?:def\\s+)?[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*\\)\\s*=>\\s*(?:#.*)?)$");
+                "^\\s*(?:(?:static\\s+)?class\\b.*|(?:for|while|switch)\\b.*|try\\s*(?:#.*)?"
+                        + "|(?:def|defprivate)\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*\\)\\s*=>\\s*(?:#.*)?)$");
         Pattern closer = Pattern.compile("^\\s*end\\.?\\s*(?:#.*)?$");
         List<Integer> starts = new ArrayList<>();
         for (int line = 0; line < lines.length; line++) {
@@ -180,7 +177,7 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
     private static int declarationLine(String[] lines, String name) {
         Matcher matcher = FelidaeCallResolver.declarationPatternFor(name).matcher("");
         for (int i = 0; i < lines.length; i++) {
-            if (lines[i].isEmpty() || Character.isWhitespace(lines[i].charAt(0))) continue;
+            if (lines[i].isEmpty()) continue;
             matcher.reset(lines[i]);
             if (matcher.find()) return i;
         }

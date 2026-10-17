@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public final class FelidaeRunGutterManager implements EditorFactoryListener {
 
     private static final Pattern MAIN_PATTERN =
-            Pattern.compile("(?m)^[ \\t]*main[ \\t]*\\(");
+            Pattern.compile("(?m)^def[ \\t]+main[ \\t]*\\(");
 
     private final Map<Editor, RangeHighlighter> highlighters = new ConcurrentHashMap<>();
 
@@ -136,7 +136,7 @@ public final class FelidaeRunGutterManager implements EditorFactoryListener {
 
         @Override
         public @NotNull String getTooltipText() {
-            return "Run Felidae main() (right-click for Check / Visualize)";
+            return "Run Felidae main() (right-click for Debug / Check)";
         }
 
         @Override
@@ -153,7 +153,7 @@ public final class FelidaeRunGutterManager implements EditorFactoryListener {
         public @NotNull ActionGroup getPopupMenuActions() {
             DefaultActionGroup group = new DefaultActionGroup();
             ActionManager actionManager = ActionManager.getInstance();
-            for (String actionId : new String[] {"Felidae.RunFile", "Felidae.CheckFile", "Felidae.VisualizeFile"}) {
+            for (String actionId : new String[] {"Felidae.RunFile", "Felidae.DebugFile", "Felidae.CheckFile"}) {
                 AnAction action = actionManager.getAction(actionId);
                 if (action != null) {
                     group.add(action);
