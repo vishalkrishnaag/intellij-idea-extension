@@ -31,11 +31,11 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
 
     /**
      * A line that starts a new top-level construct, ending the previous fold: a declaration
-     * ({@code def}, {@code defprivate}, {@code class}, {@code static class}), an annotation, an import or a
+     * ({@code def}, {@code define}, {@code class}, {@code private class}, {@code static class}), an annotation, an import or a
      * top-level {@code new}.
      */
     private static final Pattern TOP_LEVEL_START = Pattern.compile(
-            "^(?:(?:def|defprivate)\\b|(?:static[ \\t]+)?class\\b|import\\b|@|new\\b)");
+            "^(?:(?:def|define)\\b|(?:private[ \\t]+)?(?:static[ \\t]+)?class\\b|import\\b|@|new\\b)");
 
     private static final Pattern COMMENT_LINE = Pattern.compile("^[ \\t]*#");
 
@@ -83,8 +83,8 @@ public final class FelidaeFoldingBuilder extends FoldingBuilderEx implements Dum
             List<FoldingDescriptor> descriptors
     ) {
         Pattern opener = Pattern.compile(
-                "^\\s*(?:(?:static\\s+)?class\\b.*|(?:for|while|switch)\\b.*|try\\s*(?:#.*)?"
-                        + "|(?:def|defprivate)\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*\\)\\s*=>\\s*(?:#.*)?)$");
+                "^\\s*(?:(?:private\\s+)?(?:static\\s+)?class\\b.*|(?:for|while|switch)\\b.*|try\\s*(?:#.*)?"
+                        + "|(?:def|define)\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*\\)\\s*=>\\s*(?:#.*)?)$");
         Pattern closer = Pattern.compile("^\\s*end\\.?\\s*(?:#.*)?$");
         List<Integer> starts = new ArrayList<>();
         for (int line = 0; line < lines.length; line++) {

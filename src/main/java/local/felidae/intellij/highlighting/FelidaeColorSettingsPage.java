@@ -126,7 +126,7 @@ public final class FelidaeColorSettingsPage
                 new Employee(id: "e1", name: "Ada", age: 36).
 
                 @mixfix(pattern: '{left: Integer} combine {right: Integer}')
-                defprivate combineNumbers() =>
+                def combineNumbers() =>
                     left + right.
                 end
 

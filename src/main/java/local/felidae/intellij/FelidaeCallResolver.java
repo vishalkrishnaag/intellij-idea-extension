@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 public final class FelidaeCallResolver {
 
     /**
-     * Declaration head: {@code def name(args) =>} or {@code defprivate name(args) =>}, the head of a function
+     * Declaration head: {@code def name(args) =>} or {@code define name(args) =>} (positional arguments), the head of a function
      * or, indented, of a class method. Kept identical to DECLARATION_PATTERN in
      * vs-code-extension/src/extension.ts.
      *
@@ -39,7 +39,7 @@ public final class FelidaeCallResolver {
      * {@code def}, so calls are not mistaken for declarations.
      */
     private static final Pattern DECLARATION = Pattern.compile(
-            "(?m)^[ \\t]*(?:def|defprivate)[ \\t]+([A-Za-z_][A-Za-z0-9_:.]*)"
+            "(?m)^[ \\t]*(?:def|define)[ \\t]+([A-Za-z_][A-Za-z0-9_:.]*)"
                     + "[ \\t]*\\(((?:[^()]|\\((?:[^()]|\\([^()]*\\))*\\))*)\\)[ \\t]*(=>)");
 
     /** Leading `name:` of one argument segment; `(?!=)` keeps `:=` out. */
@@ -73,7 +73,7 @@ public final class FelidaeCallResolver {
             qualified.append(Pattern.quote(parts[i]));
         }
         return Pattern.compile(
-                "(?m)^[ \\t]*(?:(?:def|defprivate)[ \\t]+" + qualified + "[ \\t]*\\("
+                "(?m)^[ \\t]*(?:(?:def|define)[ \\t]+" + qualified + "[ \\t]*\\("
                         + "|(?:static[ \\t]+)?class[ \\t]+" + qualified + "\\b)");
     }
 

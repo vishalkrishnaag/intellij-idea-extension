@@ -336,10 +336,11 @@ public final class FelidaeSyntaxHighlighter
             extends LexerBase {
 
         private static final Set<String> KEYWORDS = Set.of(
-                "defprivate",
+                "define",
                 "import",
                 "class",
                 "static",
+                "private",
                 "extends",
                 "index",
                 "key",
@@ -656,7 +657,7 @@ public final class FelidaeSyntaxHighlighter
                     .subSequence(tokenStart, tokenEnd)
                     .toString();
 
-            if (text.equals("def") || text.equals("defprivate")) {
+            if (text.equals("def") || text.equals("define")) {
                 tokenType = classifyDef();
                 return;
             }

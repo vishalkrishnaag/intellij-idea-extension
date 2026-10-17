@@ -6,7 +6,7 @@ the plugin delegates diagnostics, running and debugging to the `felidae` command
 ## Features
 
 - Registers `.fx` as Felidae files
-- Syntax highlighting for comments, strings, atoms, numbers, keywords (`def`, `defprivate`, `class`, `static`, `new`,
+- Syntax highlighting for comments, strings, atoms, numbers, keywords (`def`, `define`, `class`, `private`, `static`, `new`,
   ...), types (`Integer`, `List<...>`, `Optional<...>`, ...), operators and the `db` / `console` / `system` libraries
 - Diagnostics from `felidae --check-json`
 - **Run** (`felidae file.fx`) and **Debug** of a file or of its `main()`: the gutter icon next to `def main()` runs on click

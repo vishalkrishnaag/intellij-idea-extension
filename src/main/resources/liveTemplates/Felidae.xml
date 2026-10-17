@@ -32,7 +32,17 @@
         </context>
     </template>
 
-    <template name="defprivate" value="defprivate $V1$($V2$: $V3$) =&gt;&#10;    $V4$.&#10;end" description="Declare a function only this file can use" toReformat="false" toShortenFQNames="false">
+    <template name="privateclass" value="private class $V1$&#10;    def $V2$: $V3$ := $V4$.&#10;end" description="A class only this file can use; classes are public by default" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue='"Helper"' alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue='"value"' alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue='"0"' alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <template name="define" value="define $V1$($V2$: $V3$) =&gt;&#10;    $V4$.&#10;end" description="Declare a function called with positional arguments, Java style: name(1, 2)" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"name"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"value"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"Integer"' alwaysStopAt="true"/>
