@@ -34,7 +34,7 @@ public final class FelidaeCompletionContributor extends CompletionContributor {
     private static final Pattern BINDING = Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_]*)\\s*:=");
     private static final Pattern TRAILING_IDENTIFIER = Pattern.compile("([A-Za-z_][A-Za-z0-9_]*)$");
     private static final Pattern CLASS_DECLARATION =
-            Pattern.compile("(?m)^[ \\t]*(?:static[ \\t]+)?class\\s+([A-Za-z_][A-Za-z0-9_.]*)\\b");
+            Pattern.compile("(?m)^[ \\t]*(?:static[ \\t]+)?(?:class|interface)\\s+([A-Za-z_][A-Za-z0-9_.]*)\\b");
 
     public FelidaeCompletionContributor() {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), new CompletionProvider<>() {
@@ -176,7 +176,7 @@ public final class FelidaeCompletionContributor extends CompletionContributor {
     /** The class-level and list members of the documentation, as opposed to free functions and constructs. */
     private static boolean isMember(@NotNull String name) {
         return switch (name) {
-            case "print", "range", "throw", "type", "is_atom", "Link", "Unlink" -> false;
+            case "print", "range", "throw", "type", "is_atom" -> false;
             default -> true;
         };
     }

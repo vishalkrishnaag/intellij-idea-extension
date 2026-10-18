@@ -131,7 +131,7 @@ public final class FelidaeStructureViewFactory implements PsiStructureViewFactor
 
         /** {@code class Name}, {@code static class Name} or {@code class Name extends Parent}. */
         private static final java.util.regex.Pattern CLASS_HEAD = java.util.regex.Pattern.compile(
-                "(?m)^[ \\t]*(?:static[ \\t]+)?class[ \\t]+([A-Za-z_][A-Za-z0-9_.]*)(?:[ \\t]+extends[ \\t]+([A-Za-z_][A-Za-z0-9_.]*))?");
+                "(?m)^[ \\t]*(?:static[ \\t]+)?(?:class|interface)[ \\t]+([A-Za-z_][A-Za-z0-9_.]*)(?:[ \\t]+extends[ \\t]+([A-Za-z_][A-Za-z0-9_.]*))?");
 
         private static int declarationOffset(String[] lines, int[] lineStart, String name) {
             Matcher matcher = FelidaeCallResolver.declarationPatternFor(name).matcher("");

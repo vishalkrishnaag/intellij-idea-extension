@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public final class FelidaeRunGutterManager implements EditorFactoryListener {
 
     private static final Pattern MAIN_PATTERN =
-            Pattern.compile("(?m)^def[ \\t]+main[ \\t]*\\(");
+            Pattern.compile("(?m)^[ \\t]+def[ \\t]+main[ \\t]*\\(");
 
     private final Map<Editor, RangeHighlighter> highlighters = new ConcurrentHashMap<>();
 

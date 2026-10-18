@@ -52,20 +52,37 @@
         </context>
     </template>
 
-    <template name="main" value="def main() =&gt;&#10;    $V1$&#10;end" description="Declare the program entry function" toReformat="false" toShortenFQNames="false">
+    <template name="main" value="static class $V0$&#10;    def main() =&gt;&#10;        $V1$&#10;    end&#10;end" description="Declare a program: a static class with the entry function main" toReformat="false" toShortenFQNames="false">
+        <variable name="V0" expression="" defaultValue='"App"' alwaysStopAt="true"/>
         <variable name="V1" expression="" defaultValue='"expression"' alwaysStopAt="true"/>
         <context>
             <option name="OTHER" value="true"/>
         </context>
     </template>
 
-    <template name="class" value="class $V1$&#10;    key($V2$)&#10;    def $V2$: $V3$&#10;    def $V4$: $V5$ := $V6$&#10;end" description="Declare a class; when every field is storable its instances are facts stored in TidesDB" toReformat="false" toShortenFQNames="false">
+    <template name="class" value="class $V1$&#10;    def $V2$: $V3$&#10;    def $V4$: $V5$ := $V6$&#10;end" description="Declare a plain class" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"Entity"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"String"' alwaysStopAt="true"/>
         <variable name="V4" expression="" defaultValue='"enabled"' alwaysStopAt="true"/>
         <variable name="V5" expression="" defaultValue='"Boolean"' alwaysStopAt="true"/>
         <variable name="V6" expression="" defaultValue='"true"' alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+    <template name="fact" value="@fact&#10;class $V1$&#10;    key($V2$)&#10;    def $V2$: $V3$&#10;    def $V4$: $V5$ := $V6$&#10;end" description="Declare a class whose instances are stored in the database" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue='"Entity"' alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue='"String"' alwaysStopAt="true"/>
+        <variable name="V4" expression="" defaultValue='"enabled"' alwaysStopAt="true"/>
+        <variable name="V5" expression="" defaultValue='"boolean"' alwaysStopAt="true"/>
+        <variable name="V6" expression="" defaultValue='"true"' alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+    <template name="importdb" value="import org.felidae.db.tidesdb" description="Use the TidesDB fact store" toReformat="false" toShortenFQNames="false">
         <context>
             <option name="OTHER" value="true"/>
         </context>
@@ -205,7 +222,7 @@
         </context>
     </template>
 
-    <template name="link" value="Link(&#10;    from: $V1$.$V2$,&#10;    to: $V3$.$V2$,&#10;    properties: {$V4$: $V5$}&#10;)" description="Store an edge between two stored facts" toReformat="false" toShortenFQNames="false">
+    <template name="link" value="Graph.Link(&#10;    from: $V1$.$V2$,&#10;    to: $V3$.$V2$,&#10;    properties: {$V4$: $V5$}&#10;)" description="Store an edge between two stored facts" toReformat="false" toShortenFQNames="false">
         <variable name="V1" expression="" defaultValue='"left"' alwaysStopAt="true"/>
         <variable name="V2" expression="" defaultValue='"id"' alwaysStopAt="true"/>
         <variable name="V3" expression="" defaultValue='"right"' alwaysStopAt="true"/>
@@ -252,4 +269,20 @@
         </context>
     </template>
 
+    <template name="pagerank" value="$CLASS$().pagerank(type: $TYPE$)" description="PageRank scores of the facts of a class (import org.felidae.graph.algorithms)" toReformat="false" toShortenFQNames="true">
+      <variable name="CLASS" expression="" defaultValue="&quot;Page&quot;" alwaysStopAt="true" />
+      <variable name="TYPE" expression="" defaultValue="&quot;forward&quot;" alwaysStopAt="true" />
+      <context><option name="OTHER" value="true"/></context>
+    </template>
+    <template name="communities" value="$CLASS$().communities(algorithm: $ALGORITHM$, type: both)" description="Louvain or Leiden communities (import org.felidae.graph.algorithms)" toReformat="false" toShortenFQNames="true">
+      <variable name="CLASS" expression="" defaultValue="&quot;Page&quot;" alwaysStopAt="true" />
+      <variable name="ALGORITHM" expression="" defaultValue="&quot;louvain&quot;" alwaysStopAt="true" />
+      <context><option name="OTHER" value="true"/></context>
+    </template>
+    <template name="genericclass" value="class $V1$&lt;$V2$&gt;&#10;    def $V3$: $V2$&#10;end" description="Declare a class with a type parameter" toReformat="false" toShortenFQNames="false">
+        <variable name="V1" expression="" defaultValue='"Box"' alwaysStopAt="true"/>
+        <variable name="V2" expression="" defaultValue='"T"' alwaysStopAt="true"/>
+        <variable name="V3" expression="" defaultValue='"value"' alwaysStopAt="true"/>
+        <context><option name="OTHER" value="true"/></context>
+    </template>
 </templateSet>

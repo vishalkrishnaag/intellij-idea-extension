@@ -7,26 +7,26 @@ public final class FelidaeCommenter implements Commenter {
 
     @Override
     public @Nullable String getLineCommentPrefix() {
-        return "#";
+        return "//";
     }
 
     @Override
     public @Nullable String getBlockCommentPrefix() {
-        return null;
+        return "/*";
     }
 
     @Override
     public @Nullable String getBlockCommentSuffix() {
-        return null;
+        return "*/";
     }
 
     @Override
     public @Nullable String getCommentedBlockCommentPrefix() {
-        return null;
+        return "/*";
     }
 
     @Override
     public @Nullable String getCommentedBlockCommentSuffix() {
-        return null;
+        return "*/";
     }
 }

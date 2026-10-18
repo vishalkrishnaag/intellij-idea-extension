@@ -42,7 +42,7 @@ public final class FelidaeBlockHighlighter implements EditorFactoryListener {
 
     private static final Pattern OPENER = Pattern.compile(
             "^\\s*(?:(class|for|while|switch|try)\\b.*"
-                    + "|(def)\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\(.*\\)\\s*=>\\s*(?:#.*)?)$");
+                    + "|(def)\\s+[A-Za-z_][A-Za-z0-9_:.]*(?:<[^>]*>)?\\s*\\(.*\\)(?:\\s*:\\s*[^=]+?)?\\s*=>\\s*(?://.*)?)$");
     private static final Pattern END = Pattern.compile("^\\s*end\\b.*");
 
     @Override

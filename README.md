@@ -8,7 +8,7 @@ the plugin delegates diagnostics, running and debugging to the `felidae` command
 - Registers `.fx` as Felidae files
 - Syntax highlighting for comments, strings, atoms, numbers, keywords (`def`, `define`, `class`, `private`, `static`, `new`, `import`, `package`,
   ...), types (`Integer`, `List<...>`, `Optional<...>`, ...), operators and the `db` / `console` / `system` libraries
-- Diagnostics from `felidae --check-json`: syntax errors and type errors (the compiler's own analysis)
+- Diagnostics from `felidae --check-json`: syntax errors, type errors and warnings (for example `Integer` where `int` would do)
 - **Run** (`felidae file.fx`) and **Debug** of a file or of its `main()`: the gutter icon next to `def main()` runs on click
   and has Debug / Check in its menu; **Run | Debug Felidae File** (Ctrl+Alt+F11)
 - **Debugging** with IntelliJ's own JVM debugger (needs the bundled Java plugin): line breakpoints in `.fx` files,

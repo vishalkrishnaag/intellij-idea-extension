@@ -108,7 +108,7 @@ public final class FelidaeColorSettingsPage
     @Override
     public @NotNull String getDemoText() {
         return """
-                # Felidae syntax-color preview
+                // Felidae syntax-color preview
                 package com.acme
 
                 import java.util.ArrayList

@@ -165,7 +165,7 @@ public final class FelidaeMlRanking {
         return -1;
     }
 
-    /** Blanks string bodies and `#` comments, preserving length. */
+    /** Blanks string bodies and `//` comments, preserving length. */
     private static @NotNull String maskLine(@NotNull String line) {
         StringBuilder masked = new StringBuilder(line.length());
         boolean inString = false;
@@ -179,7 +179,7 @@ public final class FelidaeMlRanking {
                 i++;
                 continue;
             }
-            if (ch == '#') {
+            if (ch == '/' && i + 1 < line.length() && line.charAt(i + 1) == '/') {
                 masked.append(" ".repeat(line.length() - i));
                 break;
             }

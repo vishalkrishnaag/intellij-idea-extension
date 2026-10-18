@@ -39,8 +39,8 @@ public final class FelidaeCallResolver {
      * {@code def}, so calls are not mistaken for declarations.
      */
     private static final Pattern DECLARATION = Pattern.compile(
-            "(?m)^[ \\t]*(?:def|define)[ \\t]+([A-Za-z_][A-Za-z0-9_:.]*)"
-                    + "[ \\t]*\\(((?:[^()]|\\((?:[^()]|\\([^()]*\\))*\\))*)\\)[ \\t]*(=>)");
+            "(?m)^[ \\t]*(?:def|define)[ \\t]+([A-Za-z_][A-Za-z0-9_:.]*)(?:<[^<>(]*(?:<[^<>]*>[^<>(]*)*>)?"
+                    + "[ \\t]*\\(((?:[^()]|\\((?:[^()]|\\([^()]*\\))*\\))*)\\)(?:[ \\t]*:[ \\t]*[A-Za-z_][\\w.<>, ]*)?[ \\t]*(=>)");
 
     /** Leading `name:` of one argument segment; `(?!=)` keeps `:=` out. */
     private static final Pattern PARAM_HEAD =
@@ -74,7 +74,7 @@ public final class FelidaeCallResolver {
         }
         return Pattern.compile(
                 "(?m)^[ \\t]*(?:(?:def|define)[ \\t]+" + qualified + "[ \\t]*\\("
-                        + "|(?:static[ \\t]+)?class[ \\t]+" + qualified + "\\b)");
+                        + "|(?:static[ \\t]+)?(?:class|interface)[ \\t]+" + qualified + "\\b)");
     }
 
     /** One function declaration found in a file's text. */

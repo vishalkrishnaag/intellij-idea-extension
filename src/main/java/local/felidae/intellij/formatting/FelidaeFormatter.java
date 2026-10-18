@@ -43,7 +43,7 @@ public final class FelidaeFormatter {
     private record BlockFrame(int headWidth) {
     }
 
-    /** Blanks out string-literal contents and "#" line comments (preserving
+    /** Blanks out string-literal contents and "//" line comments (preserving
      * length) so bracket/keyword scanning never misreads a `(` or `=>` that
      * only appears inside a string or a comment. */
     private static String maskLine(String line) {
@@ -69,9 +69,16 @@ public final class FelidaeFormatter {
                 i++;
                 continue;
             }
-            if (ch == '#') {
+            if (ch == '/' && i + 1 < length && line.charAt(i + 1) == '/') {
                 masked.append(" ".repeat(length - i));
                 break;
+            }
+            if (ch == '/' && i + 1 < length && line.charAt(i + 1) == '*') {
+                int close = line.indexOf("*/", i + 2);
+                int end = close < 0 ? length : close + 2;
+                masked.append(" ".repeat(end - i));
+                i = end;
+                continue;
             }
             if (ch == '"') {
                 inString = true;
@@ -83,6 +90,33 @@ public final class FelidaeFormatter {
             i++;
         }
         return masked.toString();
+    }
+
+    /** Whether the line opens a block comment that it does not close, so the next lines are comment text. */
+    private static boolean opensBlockComment(String line) {
+        boolean inString = false;
+        boolean open = false;
+        for (int i = 0; i < line.length(); i++) {
+            char ch = line.charAt(i);
+            char next = i + 1 < line.length() ? line.charAt(i + 1) : '\0';
+            if (open) {
+                if (ch == '*' && next == '/') {
+                    open = false;
+                    i++;
+                }
+            } else if (inString) {
+                if (ch == '\\') i++;
+                else if (ch == '"') inString = false;
+            } else if (ch == '"') {
+                inString = true;
+            } else if (ch == '/' && next == '/') {
+                return false;
+            } else if (ch == '/' && next == '*') {
+                open = true;
+                i++;
+            }
+        }
+        return open;
     }
 
     private static int leadingWidth(String rawLine) {
@@ -103,8 +137,8 @@ public final class FelidaeFormatter {
     private static final Pattern BRANCH =
             Pattern.compile("(?:else\\b(?:.*\\bthen)?|catch\\b.*\\bthen|case\\b.*\\bthen|default\\s+then)\\s*");
     private static final List<Pattern> OPENS_BLOCK = List.of(
-            Pattern.compile("\\s*(?:private\\s+)?(?:static\\s+)?class\\s+[A-Za-z_][A-Za-z0-9_.]*(?:\\s+extends?\\b.*)?\\s*"),
-            Pattern.compile("\\s*(?:def|define)\\s+[A-Za-z_][A-Za-z0-9_.]*\\s*\\([^)]*\\)\\s*=>\\s*"),
+            Pattern.compile("\\s*(?:private\\s+)?(?:static\\s+)?(?:class|interface)\\s+[A-Za-z_][A-Za-z0-9_.]*(?:\\s+extends?\\b.*)?\\s*"),
+            Pattern.compile("\\s*(?:def|define)\\s+[A-Za-z_][A-Za-z0-9_.]*(?:<[^>]*>)?\\s*\\([^)]*\\)(?:\\s*:\\s*[^=]+?)?\\s*=>\\s*"),
             Pattern.compile("\\s*(?:for\\b.*\\bthen|while\\b.*\\bthen|switch\\b.*|try)\\s*"),
             Pattern.compile("\\s*(?!(?:else|catch|case|default)\\b)\\S.*\\bthen\\s*"));
 
@@ -134,7 +168,15 @@ public final class FelidaeFormatter {
         List<String> output = new ArrayList<>();
         boolean previousRawLineWasBlank = true; // start-of-file counts as a boundary
 
+        boolean inBlockComment = false;
         for (String rawLine : rawLines) {
+            // The inside of a multi-line block comment is text, not code: it is kept as written.
+            if (inBlockComment) {
+                output.add(rawLine.stripTrailing());
+                if (rawLine.contains("*/")) inBlockComment = false;
+                continue;
+            }
+            inBlockComment = opensBlockComment(rawLine);
             String trimmed = rawLine.strip();
 
             if (trimmed.isEmpty()) {
@@ -144,7 +186,7 @@ public final class FelidaeFormatter {
             }
 
             String masked = maskLine(rawLine);
-            boolean isComment = trimmed.startsWith("#");
+            boolean isComment = trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*");
             boolean isBranch = BRANCH.matcher(trimmed).matches();
             boolean isBareEnd = trimmed.equals("end");
             // A comment's own column is only trustworthy as a dedent signal

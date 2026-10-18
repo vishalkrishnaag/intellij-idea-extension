@@ -341,8 +341,11 @@ public final class FelidaeSyntaxHighlighter
                 "package",
                 "class",
                 "static",
+                "abstract",
                 "private",
                 "extends",
+                "implements",
+                "interface",
                 "index",
                 "key",
                 "else",
@@ -369,10 +372,11 @@ public final class FelidaeSyntaxHighlighter
                 "nil"
         );
 
-        /** The types of the language; they are JVM object types, so they are spelled with a capital. */
+        /** The types of the language: the JVM primitives, their boxes and the reference types. */
         private static final Set<String> TYPE_NAMES = Set.of(
-                "Integer", "Long", "Float", "Double", "Character", "String", "Boolean", "Atom", "Any", "Object",
-                "Nothing", "List", "Map", "Optional", "Pair"
+                "int", "long", "float", "double", "boolean", "char", "byte", "short",
+                "Integer", "Long", "Float", "Double", "Character", "Byte", "Short", "String", "Boolean", "Atom", "Any",
+                "Object", "Nothing", "List", "Map", "Optional", "Pair"
         );
 
         private CharSequence buffer = "";
@@ -451,7 +455,8 @@ public final class FelidaeSyntaxHighlighter
                 return;
             }
 
-            if (current == '#') {
+            if (current == '/' && tokenStart + 1 < bufferEnd
+                    && (buffer.charAt(tokenStart + 1) == '/' || buffer.charAt(tokenStart + 1) == '*')) {
                 readComment();
                 return;
             }
@@ -489,8 +494,19 @@ public final class FelidaeSyntaxHighlighter
             tokenType = TokenType.WHITE_SPACE;
         }
 
+        // `// to the end of the line`, or `/* ... */` (also `/** ... */`) which may span lines; an unclosed one runs to the end.
         private void readComment() {
-            tokenEnd = tokenStart + 1;
+            if (buffer.charAt(tokenStart + 1) == '*') {
+                tokenEnd = tokenStart + 2;
+                while (tokenEnd < bufferEnd && !(buffer.charAt(tokenEnd) == '*' && tokenEnd + 1 < bufferEnd
+                        && buffer.charAt(tokenEnd + 1) == '/')) {
+                    tokenEnd++;
+                }
+                tokenEnd = Math.min(bufferEnd, tokenEnd + 2);
+                tokenType = COMMENT;
+                return;
+            }
+            tokenEnd = tokenStart + 2;
 
             while (tokenEnd < bufferEnd) {
                 char current = buffer.charAt(tokenEnd);
@@ -550,7 +566,7 @@ public final class FelidaeSyntaxHighlighter
          * left to the generic fallback and this returns false.
          */
         private static final Pattern DEF_FUNCTION_REST =
-                Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_:.]*\\s*\\([^)]*\\)\\s*=>.*");
+                Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_:.]*(?:<[^>]*>)?\\s*\\([^)]*\\)(?:\\s*:\\s*[^=]+?)?\\s*=>.*");
         private static final Pattern DEF_BINDING_REST =
                 Pattern.compile("\\s+[A-Za-z_][A-Za-z0-9_]*\\s*:.*");
 
