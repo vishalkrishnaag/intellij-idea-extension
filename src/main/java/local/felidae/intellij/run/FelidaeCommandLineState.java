@@ -40,7 +40,7 @@ public final class FelidaeCommandLineState
     protected @NotNull ProcessHandler startProcess()
             throws ExecutionException {
 
-        Path interpreter = resolveInterpreter();
+        Path compilerPath = resolveCompiler();
         Path sourceFile = Path.of(
                 configuration.getSourceFile()
         ).toAbsolutePath().normalize();
@@ -62,7 +62,7 @@ public final class FelidaeCommandLineState
                     ParametersListUtil.parse(arguments)
             );
         }
-        GeneralCommandLine commandLine = FelidaeProcessRunner.shellCommand(interpreter, parameters);
+        GeneralCommandLine commandLine = FelidaeProcessRunner.shellCommand(compilerPath, parameters);
 
         Path workingDirectory =
                 resolveWorkingDirectory(sourceFile);
@@ -96,11 +96,11 @@ public final class FelidaeCommandLineState
         return true;
     }
 
-    private @NotNull Path resolveInterpreter()
+    private @NotNull Path resolveCompiler()
             throws ExecutionException {
 
         String configured =
-                configuration.getInterpreterPath();
+                configuration.getCompilerPath();
 
         if (!configured.isBlank()) {
             return Path.of(configured)
@@ -109,12 +109,12 @@ public final class FelidaeCommandLineState
         }
 
         Path resolved =
-                FelidaeExecutableResolver.resolveInterpreter(
+                FelidaeExecutableResolver.resolveCompiler(
                         configuration.getProject()
                 );
 
         if (resolved == null) {
-            throw new ExecutionException(FelidaeExecutableResolver.INTERPRETER_NOT_FOUND_MESSAGE);
+            throw new ExecutionException(FelidaeExecutableResolver.COMPILER_NOT_FOUND_MESSAGE);
         }
 
         return resolved;

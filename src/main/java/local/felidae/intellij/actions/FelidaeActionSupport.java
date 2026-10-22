@@ -13,12 +13,13 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
-final class FelidaeActionSupport {
+public final class FelidaeActionSupport {
 
     private FelidaeActionSupport() {
     }
 
-    static boolean isFelidaeFile(
+    /** Shared with {@code editor.FelidaeRunGutterManager}, which needs the same check outside an action's own update(). */
+    public static boolean isFelidaeFile(
             @Nullable VirtualFile file
     ) {
         if (file == null || file.isDirectory()) {

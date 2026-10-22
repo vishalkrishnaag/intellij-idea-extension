@@ -23,18 +23,41 @@ import java.util.List;
 
 public final class FelidaeProcessRunner {
 
-    /** Shell launch for user programs; tooling keeps its direct stdio protocol. */
+    /**
+     * The full command line to run {@code executable}: felidae.jar has no launcher script, so when
+     * {@code executable} ends in {@code .jar} the actual program is {@code java -jar <executable>
+     * <arguments...>}; a native wrapper (hand-placed on PATH, or a configured override) is run directly.
+     * The first element is the program, the rest its arguments - every felidae launch (shellCommand's
+     * GeneralCommandLine, and FelidaeExternalAnnotator's own ProcessBuilder for live checking) goes
+     * through this one place so the jar-vs-wrapper distinction cannot drift between them.
+     */
+    public static @NotNull List<String> launchCommand(@NotNull Path executable, @NotNull List<String> arguments) {
+        boolean isJar = executable.toString().toLowerCase(java.util.Locale.ROOT).endsWith(".jar");
+        java.util.List<String> command = new java.util.ArrayList<>();
+        if (isJar) {
+            command.add("java");
+            command.add("-jar");
+        }
+        command.add(executable.toString());
+        command.addAll(arguments);
+        return command;
+    }
+
+    /** Shell launch for user programs; tooling keeps its direct stdio protocol. See {@link #launchCommand}. */
     public static GeneralCommandLine shellCommand(Path executable, List<String> arguments) {
         GeneralCommandLine command = new GeneralCommandLine();
         command.setCharset(StandardCharsets.UTF_8);
+        List<String> full = launchCommand(executable, arguments);
+        String program = full.get(0);
+        List<String> allArguments = full.subList(1, full.size());
         if (com.intellij.openapi.util.SystemInfo.isWindows) {
             command.setExePath(System.getenv().getOrDefault("ComSpec", "cmd.exe"));
             command.addParameters("/d", "/v:on", "/s", "/c");
-            command.withEnvironment("FELIDAE_RUN_EXE", executable.toString());
+            command.withEnvironment("FELIDAE_RUN_EXE", program);
             StringBuilder invocation = new StringBuilder("\"!FELIDAE_RUN_EXE!\"");
-            for (int index = 0; index < arguments.size(); ++index) {
+            for (int index = 0; index < allArguments.size(); ++index) {
                 String key = "FELIDAE_RUN_ARG_" + index;
-                String value = arguments.get(index).replaceAll("(\\\\*)\"", "$1$1\\\\\"")
+                String value = allArguments.get(index).replaceAll("(\\\\*)\"", "$1$1\\\\\"")
                         .replaceAll("(\\\\+)$", "$1$1");
                 command.withEnvironment(key, value);
                 invocation.append(" \"!").append(key).append("!\"");
@@ -42,8 +65,8 @@ public final class FelidaeProcessRunner {
             command.addParameter("\"" + invocation + "\"");
         } else {
             command.setExePath("/bin/sh");
-            command.addParameters("-c", "exec \"$@\"", "felidae-run", executable.toString());
-            command.addParameters(arguments);
+            command.addParameters("-c", "exec \"$@\"", "felidae-run", program);
+            command.addParameters(allArguments);
         }
         return command;
     }
@@ -54,15 +77,15 @@ public final class FelidaeProcessRunner {
         );
     }
 
-    public static void runInterpreter(
+    public static void runCompiler(
             @NotNull Project project,
-            @NotNull Path interpreter,
+            @NotNull Path executable,
             @NotNull Path sourceFile
     ) {
         run(
                 project,
                 "Run Felidae",
-                interpreter,
+                executable,
                 sourceFile,
                 List.of(),
                 false,
@@ -80,7 +103,7 @@ public final class FelidaeProcessRunner {
      */
     public static void runQuery(
             @NotNull Project project,
-            @NotNull Path interpreter,
+            @NotNull Path executable,
             @NotNull Path sourceFile,
             @NotNull String query
     ) {
@@ -100,7 +123,7 @@ public final class FelidaeProcessRunner {
         run(
                 project,
                 "Run Felidae Query",
-                interpreter,
+                executable,
                 queryFile,
                 List.of(),
                 false,

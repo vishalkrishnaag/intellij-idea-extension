@@ -19,8 +19,8 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import local.felidae.intellij.FelidaeFileType;
 import local.felidae.intellij.FelidaeIcons;
+import local.felidae.intellij.actions.FelidaeActionSupport;
 import local.felidae.intellij.execution.FelidaeExecutableResolver;
 import local.felidae.intellij.execution.FelidaeProcessRunner;
 import local.felidae.intellij.ui.FelidaeConsoleService;
@@ -61,7 +61,7 @@ public final class FelidaeRunGutterManager implements EditorFactoryListener {
         }
 
         VirtualFile file = FileDocumentManager.getInstance().getFile(editor.getDocument());
-        if (!isFelidaeFile(file)) {
+        if (!FelidaeActionSupport.isFelidaeFile(file)) {
             return;
         }
 
@@ -78,14 +78,6 @@ public final class FelidaeRunGutterManager implements EditorFactoryListener {
     @Override
     public void editorReleased(@NotNull EditorFactoryEvent event) {
         highlighters.remove(event.getEditor());
-    }
-
-    private static boolean isFelidaeFile(@Nullable VirtualFile file) {
-        if (file == null || file.isDirectory()) {
-            return false;
-        }
-        String extension = file.getExtension();
-        return extension != null && FelidaeFileType.DEFAULT_EXTENSION.equalsIgnoreCase(extension);
     }
 
     private void refresh(@NotNull Editor editor, @NotNull Project project, @NotNull VirtualFile file) {
@@ -166,12 +158,11 @@ public final class FelidaeRunGutterManager implements EditorFactoryListener {
             if (project.isDisposed()) {
                 return;
             }
-            Path interpreter = FelidaeExecutableResolver.resolveInterpreter(project);
-            if (interpreter == null) {
-                FelidaeConsoleService console = FelidaeConsoleService.getInstance(project);
-                console.show();
-                console.clear();
-                console.printError(FelidaeExecutableResolver.INTERPRETER_NOT_FOUND_MESSAGE);
+            Path compilerPath = FelidaeExecutableResolver.resolveOrReport(
+                    project,
+                    FelidaeConsoleService.getInstance(project)
+            );
+            if (compilerPath == null) {
                 return;
             }
 
@@ -182,7 +173,7 @@ public final class FelidaeRunGutterManager implements EditorFactoryListener {
                 return;
             }
 
-            FelidaeProcessRunner.runInterpreter(project, interpreter, sourceFile);
+            FelidaeProcessRunner.runCompiler(project, compilerPath, sourceFile);
         }
 
         @Override

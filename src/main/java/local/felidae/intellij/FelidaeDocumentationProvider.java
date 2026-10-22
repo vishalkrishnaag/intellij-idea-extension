@@ -1,6 +1,7 @@
 package local.felidae.intellij;
 
 import com.intellij.lang.documentation.AbstractDocumentationProvider;
+import com.intellij.lang.documentation.DocumentationMarkup;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
@@ -54,10 +55,7 @@ public final class FelidaeDocumentationProvider extends AbstractDocumentationPro
 
         FelidaeBuiltinDocs.Entry entry = FelidaeBuiltinDocs.get(key);
         if (entry != null) {
-            return "<div class='definition'><b>" + escape(entry.heading()) + "</b></div>" +
-                    "<div class='content'>" + escape(entry.description()) + "</div>" +
-                    parameterTable(toParams(entry)) +
-                    "<div class='content'><pre>" + escape(entry.example()) + "</pre></div>";
+            return render(entry.heading(), signature(entry.heading(), toParams(entry)), entry.description(), toParams(entry), entry.example());
         }
 
         // Not a builtin: document the user's own declarations too, so hovering
@@ -71,16 +69,47 @@ public final class FelidaeDocumentationProvider extends AbstractDocumentationPro
         if (resolved == null) {
             return null;
         }
-        StringBuilder signature = new StringBuilder(resolved.label()).append("(");
-        for (int i = 0; i < resolved.params().size(); i++) {
-            if (i > 0) signature.append(", ");
-            signature.append(resolved.params().get(i).label());
+        return render(resolved.label(), signature(resolved.label(), resolved.params()), resolved.detail(), resolved.params(), null);
+    }
+
+    /**
+     * Quick Documentation laid out the way Java's and Kotlin's own providers do: a bold signature as the
+     * {@code definition}, the prose as {@code content}, then the {@code sections} table (DocumentationMarkup,
+     * the same helper {@code JavaDocInfoGenerator}/{@code KotlinQuickDocumentationProvider} build on) for the
+     * parameter list and, for a builtin, a runnable example.
+     */
+    private static @NotNull String render(
+            @NotNull String heading,
+            @NotNull String signature,
+            @NotNull String description,
+            @NotNull List<FelidaeCallResolver.Param> params,
+            @Nullable String example
+    ) {
+        StringBuilder html = new StringBuilder();
+        html.append(DocumentationMarkup.DEFINITION_START).append("<b>").append(escape(signature)).append("</b>")
+                .append(DocumentationMarkup.DEFINITION_END);
+        html.append(DocumentationMarkup.CONTENT_START).append(escape(description)).append(DocumentationMarkup.CONTENT_END);
+        if (!params.isEmpty() || example != null) {
+            html.append(DocumentationMarkup.SECTIONS_START);
+            if (!params.isEmpty()) appendSection(html, "Parameters:", parameterList(params));
+            if (example != null) appendSection(html, "Example:", "<pre>" + escape(example) + "</pre>");
+            html.append(DocumentationMarkup.SECTIONS_END);
         }
-        signature.append(")");
-        return "<div class='definition'><b>" + escape(resolved.label()) + "</b></div>" +
-                "<div class='content'>" + escape(resolved.detail()) + "</div>" +
-                parameterTable(resolved.params()) +
-                "<div class='content'><pre>" + escape(signature.toString()) + "</pre></div>";
+        return html.toString();
+    }
+
+    private static void appendSection(@NotNull StringBuilder html, @NotNull String label, @NotNull String body) {
+        html.append(DocumentationMarkup.SECTION_HEADER_START).append(label).append(DocumentationMarkup.SECTION_SEPARATOR)
+                .append(body).append(DocumentationMarkup.SECTION_END);
+    }
+
+    private static @NotNull String signature(@NotNull String heading, @NotNull List<FelidaeCallResolver.Param> params) {
+        StringBuilder signature = new StringBuilder(heading).append("(");
+        for (int i = 0; i < params.size(); i++) {
+            if (i > 0) signature.append(", ");
+            signature.append(params.get(i).label());
+        }
+        return signature.append(")").toString();
     }
 
     private static @NotNull List<FelidaeCallResolver.Param> toParams(
@@ -93,13 +122,9 @@ public final class FelidaeDocumentationProvider extends AbstractDocumentationPro
         return params;
     }
 
-    /** Renders the expected named arguments as IntelliJ's standard doc section. */
-    private static @NotNull String parameterTable(@NotNull List<FelidaeCallResolver.Param> params) {
-        if (params.isEmpty()) {
-            return "";
-        }
-        StringBuilder html = new StringBuilder("<table class='sections'>");
-        html.append("<tr><td valign='top' class='section'><p>Params:</p></td><td valign='top'>");
+    /** One line per named argument, as the body of the "Parameters:" section. */
+    private static @NotNull String parameterList(@NotNull List<FelidaeCallResolver.Param> params) {
+        StringBuilder html = new StringBuilder();
         for (FelidaeCallResolver.Param param : params) {
             html.append("<p><code>").append(escape(param.name())).append("</code>");
             if (!param.type().isEmpty()) {
@@ -107,7 +132,6 @@ public final class FelidaeDocumentationProvider extends AbstractDocumentationPro
             }
             html.append("</p>");
         }
-        html.append("</td></tr></table>");
         return html.toString();
     }
 

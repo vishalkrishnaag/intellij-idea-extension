@@ -17,14 +17,14 @@ import java.nio.file.Path;
  * override configured on the Felidae settings page. Checked first by
  * FelidaeExecutableResolver, ahead of environment variables and
  * auto-detection, mirroring the VS Code extension's
- * felidae.interpreterPath setting.
+ * felidae.compilerPath setting.
  */
 @Service(Service.Level.PROJECT)
 @State(name = "FelidaeSettings", storages = @Storage("felidae.xml"))
 public final class FelidaeSettingsState implements PersistentStateComponent<FelidaeSettingsState.SettingsData> {
 
     public static final class SettingsData {
-        public String interpreterPath = "";
+        public String compilerPath = "";
     }
 
     private SettingsData data = new SettingsData();
@@ -48,16 +48,16 @@ public final class FelidaeSettingsState implements PersistentStateComponent<Feli
         this.data = state;
     }
 
-    public @NotNull String getInterpreterPath() {
-        return data.interpreterPath;
+    public @NotNull String getCompilerPath() {
+        return data.compilerPath;
     }
 
-    public void setInterpreterPath(@NotNull String value) {
-        data.interpreterPath = value;
+    public void setCompilerPath(@NotNull String value) {
+        data.compilerPath = value;
     }
 
-    public @Nullable Path resolvedInterpreterPath() {
-        return resolved(data.interpreterPath);
+    public @Nullable Path resolvedCompilerPath() {
+        return resolved(data.compilerPath);
     }
 
     private @Nullable Path resolved(@Nullable String raw) {
@@ -69,7 +69,7 @@ public final class FelidaeSettingsState implements PersistentStateComponent<Feli
             if (!path.isAbsolute() && project.getBasePath() != null)
                 path = Path.of(project.getBasePath()).resolve(path);
             // Preserve an explicit invalid path so launching reports it;
-            // never silently substitute a different interpreter.
+            // never silently substitute a different compiler.
             return path.toAbsolutePath().normalize();
         } catch (InvalidPathException exception) {
             return null;

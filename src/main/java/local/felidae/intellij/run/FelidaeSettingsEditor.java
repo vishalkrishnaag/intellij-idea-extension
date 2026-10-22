@@ -19,7 +19,7 @@ public final class FelidaeSettingsEditor
     private final TextFieldWithBrowseButton sourceFileField =
             new TextFieldWithBrowseButton();
 
-    private final TextFieldWithBrowseButton interpreterField =
+    private final TextFieldWithBrowseButton compilerPathField =
             new TextFieldWithBrowseButton();
 
     private final TextFieldWithBrowseButton workingDirectoryField =
@@ -43,11 +43,11 @@ public final class FelidaeSettingsEditor
                         .withTitle("Select Felidae Source File")
         );
 
-        interpreterField.addBrowseFolderListener(
+        compilerPathField.addBrowseFolderListener(
                 project,
                 FileChooserDescriptorFactory
-                        .createSingleFileNoJarsDescriptor()
-                        .withTitle("Select Felidae Interpreter")
+                        .createSingleFileDescriptor()
+                        .withTitle("Select Felidae Compiler")
         );
 
         workingDirectoryField.addBrowseFolderListener(
@@ -65,8 +65,8 @@ public final class FelidaeSettingsEditor
                         false
                 )
                 .addLabeledComponent(
-                        new JBLabel("Interpreter:"),
-                        interpreterField,
+                        new JBLabel("Compiler:"),
+                        compilerPathField,
                         1,
                         false
                 )
@@ -97,8 +97,8 @@ public final class FelidaeSettingsEditor
                 configuration.getSourceFile()
         );
 
-        interpreterField.setText(
-                configuration.getInterpreterPath()
+        compilerPathField.setText(
+                configuration.getCompilerPath()
         );
 
         argumentsField.setText(
@@ -118,8 +118,8 @@ public final class FelidaeSettingsEditor
                 sourceFileField.getText().trim()
         );
 
-        configuration.setInterpreterPath(
-                interpreterField.getText().trim()
+        configuration.setCompilerPath(
+                compilerPathField.getText().trim()
         );
 
         configuration.setProgramArguments(

@@ -40,20 +40,12 @@ public final class FelidaeCheckAction
         }
 
         Path debugger =
-                FelidaeExecutableResolver.resolveInterpreter(project);
+                FelidaeExecutableResolver.resolveOrReport(
+                        project,
+                        FelidaeConsoleService.getInstance(project)
+                );
 
         if (debugger == null) {
-            FelidaeConsoleService console =
-                    FelidaeConsoleService.getInstance(project);
-
-            console.show();
-            console.clear();
-            console.printError(
-                    "Felidae interpreter executable was not found.\n\n" +
-                            "Configure the FELIDAE_PATH environment variable or the " +
-                            "Felidae interpreter path.\n"
-            );
-
             return;
         }
 

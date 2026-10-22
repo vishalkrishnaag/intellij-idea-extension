@@ -10,7 +10,8 @@
         <![CDATA[
         Felidae language support for .fx files: highlighting, completion, folding, formatting, diagnostics from
         the felidae compiler (felidae --check-json), Run and Debug of the compiled program on the JVM, and a
-        query action. Needs the felidae command (./gradlew installDist in the Felidae repository).
+        query action. Needs the felidae command, or felidae.jar (run with java -jar) built by ./gradlew felidaeJar
+        in the Felidae repository.
         ]]>
     </description>
 

@@ -28,11 +28,13 @@ files yet: highlighting, folding and completion read the text.
 
 ## The felidae command
 
-Build it with `./gradlew installDist` in the Felidae repository (JDK 25). The plugin looks for
-`<project>/build/java/cli/install/felidae/bin/felidae` (`felidae.bat` on Windows), then `dist/bin`, `release/bin` and
-`bin` under the project, then the `FELIDAE_PATH` environment variable, then `PATH`. A path set under
-**Settings | Tools | Felidae** (relative to the project unless absolute) wins over all of these. Run and Check use the
-same setting. Programs that keep facts need an `init.fx` beside them, as for any run.
+Build it with `./gradlew felidaeJar` in the Felidae repository (JDK 25); that writes
+`<project>/build/java/felidae.jar`, which the plugin finds and runs with `java -jar` (there is no launcher script -
+the compiler's former `cli` module was folded into its root project, which has no `installDist` task). Lookup order:
+a path set under **Settings | Tools | Felidae** (relative to the project unless absolute), then the `FELIDAE_PATH`
+environment variable, then `build/java/felidae.jar` under the project, then `PATH`. Run and Check use the same
+setting. A program that keeps facts opens its database at the first one written (`db.location(...)` in a
+`static init` block names the directory; there is no `init.fx`).
 
 ## Debugging
 

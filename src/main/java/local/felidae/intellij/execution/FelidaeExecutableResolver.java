@@ -2,6 +2,7 @@ package local.felidae.intellij.execution;
 
 import com.intellij.openapi.project.Project;
 import local.felidae.intellij.settings.FelidaeSettingsState;
+import local.felidae.intellij.ui.FelidaeConsoleService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,25 +14,35 @@ import com.intellij.openapi.util.SystemInfo;
 
 public final class FelidaeExecutableResolver {
 
-    public static final String INTERPRETER_ENVIRONMENT_VARIABLE =
+    public static final String COMPILER_ENVIRONMENT_VARIABLE =
             "FELIDAE_PATH";
 
-    private static final String WINDOWS_INTERPRETER_EXECUTABLE =
+    private static final String WINDOWS_COMPILER_EXECUTABLE =
             "felidae.bat";
 
-    private static final String UNIX_INTERPRETER_EXECUTABLE =
+    private static final String UNIX_COMPILER_EXECUTABLE =
             "felidae";
 
     /**
-     * What every action shows when no interpreter can be found. The locations
+     * What every action shows when no felidae compiler can be found. The locations
      * are the ones {@link #resolve} searches, so the two cannot drift apart.
      */
-    public static final String INTERPRETER_NOT_FOUND_MESSAGE =
-            "Felidae interpreter was not found.\n\n" +
-                    "Looked in <project>/build/java/cli/install/felidae/bin (./gradlew installDist in the Felidae " +
-                    "repository), dist/bin and release/bin, and on PATH.\n\n" +
-                    "Set the interpreter path in Settings | Tools | Felidae, or the " +
+    public static final String COMPILER_NOT_FOUND_MESSAGE =
+            "Felidae compiler was not found.\n\n" +
+                    "Looked for <project>/build/java/felidae.jar (built by ./gradlew felidaeJar in the Felidae " +
+                    "repository), and on PATH.\n\n" +
+                    "Set the compiler path in Settings | Tools | Felidae, or the " +
                     "FELIDAE_PATH environment variable.\n";
+
+    /**
+     * Where Gradle's felidaeJar task (on the merged root compiler module) writes the jar, relative to a project
+     * root. Pure and project-independent on purpose, so it is unit-tested directly (FelidaeExecutableResolverTest)
+     * without needing a Project or the IntelliJ platform test fixtures the rest of this class's resolution
+     * requires.
+     */
+    static @NotNull String compilerJarRelativePath() {
+        return "build/java/felidae.jar";
+    }
 
     private FelidaeExecutableResolver() {
         throw new AssertionError(
@@ -39,18 +50,18 @@ public final class FelidaeExecutableResolver {
         );
     }
 
-    public static @Nullable Path resolveInterpreter(
+    public static @Nullable Path resolveCompiler(
             @NotNull Project project
     ) {
-        Path configured = FelidaeSettingsState.getInstance(project).resolvedInterpreterPath();
+        Path configured = FelidaeSettingsState.getInstance(project).resolvedCompilerPath();
         if (configured != null) {
             return configured;
         }
         return resolve(
                 project,
-                INTERPRETER_ENVIRONMENT_VARIABLE,
-                WINDOWS_INTERPRETER_EXECUTABLE,
-                UNIX_INTERPRETER_EXECUTABLE
+                COMPILER_ENVIRONMENT_VARIABLE,
+                WINDOWS_COMPILER_EXECUTABLE,
+                UNIX_COMPILER_EXECUTABLE
         );
     }
 
@@ -83,19 +94,19 @@ public final class FelidaeExecutableResolver {
         }
 
         String executable = SystemInfo.isWindows ? windowsExecutable : unixExecutable;
-        // felidae is a launcher script written by Gradle's installDist; a packaged one has the same bin/ layout.
+        // felidae compiles to JVM bytecode; it is not an interpreter. Gradle's `felidaeJar` task on the merged
+        // root `compiler` module writes build/java/felidae.jar - there is no launcher script, so the jar is the
+        // one search candidate and is run with `java -jar` (see FelidaeProcessRunner.shellCommand). A native
+        // wrapper of this platform's executable name is still honored if hand-placed on PATH.
         List<Path> candidates = List.of(
-                projectRoot.resolve("build/java/cli/install/felidae/bin").resolve(executable),
-                projectRoot.resolve("dist/bin").resolve(executable),
-                projectRoot.resolve("release/bin").resolve(executable),
-                projectRoot.resolve("bin").resolve(executable));
+                projectRoot.resolve(compilerJarRelativePath()));
 
         for (Path candidate : candidates) {
             Path normalized = candidate
                     .toAbsolutePath()
                     .normalize();
 
-            if (Files.isRegularFile(normalized) && (SystemInfo.isWindows || Files.isExecutable(normalized))) {
+            if (Files.isRegularFile(normalized) && (SystemInfo.isWindows || Files.isExecutable(normalized) || normalized.toString().endsWith(".jar"))) {
                 return normalized;
             }
         }
@@ -111,6 +122,23 @@ public final class FelidaeExecutableResolver {
         }
 
         return null;
+    }
+
+    /**
+     * Resolves the felidae compiler, or reports {@link #COMPILER_NOT_FOUND_MESSAGE} to {@code console}
+     * (shown and cleared first, matching every call site this replaces) and returns {@code null}.
+     */
+    public static @Nullable Path resolveOrReport(
+            @NotNull Project project,
+            @NotNull FelidaeConsoleService console
+    ) {
+        Path resolved = resolveCompiler(project);
+        if (resolved == null) {
+            console.show();
+            console.clear();
+            console.printError(COMPILER_NOT_FOUND_MESSAGE);
+        }
+        return resolved;
     }
 
     private static @Nullable Path resolveFromEnvironment(

@@ -46,12 +46,12 @@ public final class FelidaeRunConfiguration
         felidaeOptions().setSourceFile(value);
     }
 
-    public @NotNull String getInterpreterPath() {
-        return felidaeOptions().getInterpreterPath();
+    public @NotNull String getCompilerPath() {
+        return felidaeOptions().getCompilerPath();
     }
 
-    public void setInterpreterPath(@NotNull String value) {
-        felidaeOptions().setInterpreterPath(value);
+    public void setCompilerPath(@NotNull String value) {
+        felidaeOptions().setCompilerPath(value);
     }
 
     public @NotNull String getProgramArguments() {
@@ -102,18 +102,18 @@ public final class FelidaeRunConfiguration
             );
         }
 
-        String interpreterValue = getInterpreterPath();
+        String compilerValue = getCompilerPath();
 
-        if (!interpreterValue.isBlank()) {
-            Path interpreter = parseRequiredPath(
-                    interpreterValue,
-                    "Felidae interpreter"
+        if (!compilerValue.isBlank()) {
+            Path compiler = parseRequiredPath(
+                    compilerValue,
+                    "Felidae compiler"
             );
 
-            if (!Files.isRegularFile(interpreter)) {
+            if (!Files.isRegularFile(compiler)) {
                 throw new RuntimeConfigurationError(
-                        "Felidae interpreter does not exist: " +
-                                interpreter
+                        "Felidae compiler does not exist: " +
+                                compiler
                 );
             }
         }

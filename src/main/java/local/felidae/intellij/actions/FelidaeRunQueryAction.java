@@ -55,17 +55,13 @@ public final class FelidaeRunQueryAction
             return;
         }
 
-        Path interpreter =
-                FelidaeExecutableResolver.resolveInterpreter(project);
+        Path compilerPath =
+                FelidaeExecutableResolver.resolveOrReport(
+                        project,
+                        FelidaeConsoleService.getInstance(project)
+                );
 
-        if (interpreter == null) {
-            FelidaeConsoleService console =
-                    FelidaeConsoleService.getInstance(project);
-
-            console.show();
-            console.clear();
-            console.printError(FelidaeExecutableResolver.INTERPRETER_NOT_FOUND_MESSAGE);
-
+        if (compilerPath == null) {
             return;
         }
 
@@ -88,7 +84,7 @@ public final class FelidaeRunQueryAction
 
         FelidaeProcessRunner.runQuery(
                 project,
-                interpreter,
+                compilerPath,
                 sourceFile,
                 query.trim()
         );

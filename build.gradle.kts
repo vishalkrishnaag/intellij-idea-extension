@@ -39,6 +39,23 @@ dependencies {
     // failure a real parser cannot have. Bundled rather than compileOnly so
     // the plugin does not depend on which libraries a given IDE build exposes.
     implementation("com.google.code.gson:gson:2.11.0")
+
+    // Plain JUnit for the plugin's pure-logic functions (no Project/IntelliJ platform dependency), matching
+    // the version the Felidae compiler module pins (compiler/gradle/libs.versions.toml). Fixture tests that need
+    // a Project (BasePlatformTestCase and friends) are a separate, larger effort, not wired here.
+    testImplementation(platform("org.junit:junit-bom:5.13.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // bundledPlugin("com.intellij.java") makes the IntelliJ Platform Gradle plugin register a JUnit 5
+    // LauncherSessionListener (com.intellij.testFramework.junit5.impl.JUnit5TestEnvironmentInitializer) on every
+    // test run in this project, platform fixtures or not; that listener's own init path needs JUnit 4's
+    // org.junit.rules.TestRule on the runtime classpath, or the test JVM fails to start with a
+    // NoClassDefFoundError before any test of ours even runs. None of our tests use JUnit 4 themselves.
+    testRuntimeOnly("junit:junit:4.13.2")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 intellijPlatform {

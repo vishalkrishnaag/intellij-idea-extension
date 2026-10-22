@@ -62,7 +62,7 @@ public final class FelidaeIcons {
             load("/icons/felidaeRun.svg");
 
     /*
-     * Run Celidae using --check-json.
+     * Run Felidae using --check-json.
      *
      * Recommended resource size: 16x16.
      */

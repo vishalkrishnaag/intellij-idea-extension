@@ -57,7 +57,7 @@ final class FelidaePositionManager implements PositionManager {
         }
         int line = location.lineNumber() - 1;
         if (line < 0 || !isFelidaeSourceName(sourceName)) throw NoDataException.INSTANCE;
-        PsiFile file = findFile(process.getProject(), sourceName);
+        PsiFile file = findFile(process.getProject(), sourceName, packageOf(location));
         if (file == null) throw NoDataException.INSTANCE;
         return SourcePosition.createFromLine(file, line);
     }
@@ -172,14 +172,57 @@ final class FelidaePositionManager implements PositionManager {
         }
     }
 
-    private static @Nullable PsiFile findFile(@NotNull Project project, @NotNull String sourceName) {
+    /**
+     * The declaring class's package (as used for package/directory matching below, see AGENTS.md's output
+     * model: {@code package com.acme} puts a file's classes under {@code com/acme}), or {@code null} for a
+     * nested class's outer boundary not being present or a default-package class - either way, {@link #findFile}
+     * then falls back to its pre-existing first-match behavior.
+     */
+    private static @Nullable String packageOf(@NotNull Location location) {
+        ReferenceType declaringType;
+        try {
+            declaringType = location.declaringType();
+        } catch (RuntimeException exception) {
+            // the VM may already be gone by the time a stale location is resolved
+            return null;
+        }
+        if (declaringType == null) return null;
+        String name = declaringType.name();
+        // JDI names a nested class with '$' (Outer$Inner); only the part before it carries the package.
+        int dollar = name.indexOf('$');
+        String outer = dollar >= 0 ? name.substring(0, dollar) : name;
+        int lastDot = outer.lastIndexOf('.');
+        return lastDot >= 0 ? outer.substring(0, lastDot) : null;
+    }
+
+    /** Whether {@code file}'s parent directory chain ends with {@code expectedPackage}'s dot-separated segments. */
+    private static boolean matchesPackage(@NotNull VirtualFile file, @NotNull String expectedPackage) {
+        VirtualFile parent = file.getParent();
+        if (parent == null) return false;
+        String expectedRelativeDir = expectedPackage.replace('.', '/');
+        String parentPath = parent.getPath();
+        return parentPath.equals(expectedRelativeDir) || parentPath.endsWith("/" + expectedRelativeDir);
+    }
+
+    /**
+     * Several {@code .fx} files with the same name in different packages is ambiguous from the bare file name a
+     * compiled class's {@code SourceFile} attribute carries (it has no path) - {@code expectedPackage}, when
+     * known, disambiguates by preferring the candidate whose directory matches the stack frame's declaring
+     * class's package; any other case (no package known, or none of the candidates match) falls back to the
+     * first candidate the index returns, exactly as before this method took a package hint.
+     */
+    private static @Nullable PsiFile findFile(@NotNull Project project, @NotNull String sourceName, @Nullable String expectedPackage) {
         return ReadAction.compute(() -> {
             Collection<VirtualFile> files = FilenameIndex.getVirtualFilesByName(sourceName, GlobalSearchScope.projectScope(project));
+            VirtualFile fallback = null;
             for (VirtualFile file : files) {
-                PsiFile psi = PsiManager.getInstance(project).findFile(file);
-                if (psi != null) return psi;
+                if (fallback == null) fallback = file;
+                if (expectedPackage != null && matchesPackage(file, expectedPackage)) {
+                    PsiFile psi = PsiManager.getInstance(project).findFile(file);
+                    if (psi != null) return psi;
+                }
             }
-            return null;
+            return fallback == null ? null : PsiManager.getInstance(project).findFile(fallback);
         });
     }
 }

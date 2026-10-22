@@ -1,5 +1,7 @@
 package local.felidae.intellij;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.lang.annotation.HighlightSeverity;
@@ -8,6 +10,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import local.felidae.intellij.execution.FelidaeExecutableResolver;
+import local.felidae.intellij.execution.FelidaeProcessRunner;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,25 +46,7 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
     private static final Duration OUTPUT_READ_TIMEOUT =
             Duration.ofSeconds(2);
 
-    /*
-     * Expected protocol:
-     *
-     * FELIDAE_DIAGNOSTIC severity=error line=4 column=12 message=Expected ')'
-     */
-    private static final Pattern PROTOCOL_DIAGNOSTIC = Pattern.compile(
-            "^FELIDAE_DIAGNOSTIC\\s+" +
-                    "severity=(\\w+)\\s+" +
-                    "line=(\\d+)\\s+" +
-                    "column=(\\d+)\\s+" +
-                    "message=(.*)$"
-    );
-
-    private static final Pattern JSON_DIAGNOSTIC = Pattern.compile(
-            "\\{[^{}]*\"severity\"\\s*:\\s*\"([^\"]+)\"[^{}]*" +
-                    "\"line\"\\s*:\\s*(\\d+)[^{}]*" +
-                    "\"column\"\\s*:\\s*(\\d+)[^{}]*" +
-                    "\"message\"\\s*:\\s*\"((?:\\\\.|[^\"])*)\"[^{}]*}"
-    );
+    private static final Gson GSON = new Gson();
 
     /*
      * Fallback runtime-error location formats:
@@ -94,7 +79,7 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
             return null;
         }
 
-        Path debugHost = FelidaeExecutableResolver.resolveInterpreter(file.getProject());
+        Path debugHost = FelidaeExecutableResolver.resolveCompiler(file.getProject());
 
         return new CheckRequest(sourceFile, debugHost);
     }
@@ -110,9 +95,9 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
         if (debugHost == null || !Files.isRegularFile(debugHost)) {
             diagnostics.add(new CheckDiagnostic(
                     "warning",
-                    "Felidae interpreter executable was not found. " +
-                            "Set " + FelidaeExecutableResolver.INTERPRETER_ENVIRONMENT_VARIABLE +
-                            " or configure the Felidae interpreter path.",
+                    "Felidae compiler executable was not found. " +
+                            "Set " + FelidaeExecutableResolver.COMPILER_ENVIRONMENT_VARIABLE +
+                            " or configure the Felidae compiler path.",
                     1,
                     1
             ));
@@ -133,10 +118,12 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
         }
 
         // felidae [options] program.fx: options after the program would be the program's own arguments.
+        // launchCommand prepends `java -jar` when debugHost is a jar (felidae.jar has no launcher script).
         ProcessBuilder builder = new ProcessBuilder(
-                debugHost.toString(),
-                "--check-json",
-                request.sourceFile().toString()
+                FelidaeProcessRunner.launchCommand(
+                        debugHost,
+                        List.of("--check-json", request.sourceFile().toString())
+                )
         );
 
         /*
@@ -189,9 +176,6 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
             String output = readProcessOutput(outputFuture);
 
             parseJsonDiagnostics(output, diagnostics);
-            if (diagnostics.isEmpty()) {
-                parseProtocolDiagnostics(output, diagnostics);
-            }
 
             /*
              * Avoid adding one large duplicate runtime error when the
@@ -292,7 +276,9 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
             TextRange range = rangeFor(
                     sourceText,
                     diagnostic.line(),
-                    diagnostic.column()
+                    diagnostic.column(),
+                    diagnostic.endLine(),
+                    diagnostic.endColumn()
             );
 
             HighlightSeverity severity = severityFor(
@@ -351,103 +337,55 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
         return output.toString();
     }
 
-    private static void parseProtocolDiagnostics(
-            @NotNull String output,
-            @NotNull List<CheckDiagnostic> diagnostics
-    ) {
-        for (String rawLine : output.split("\\R")) {
-            String line = rawLine.strip();
-
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            Matcher matcher = PROTOCOL_DIAGNOSTIC.matcher(line);
-
-            if (!matcher.matches()) {
-                continue;
-            }
-
-            String severity = matcher.group(1);
-            int lineNumber = parsePositiveInt(
-                    matcher.group(2),
-                    1
-            );
-            int columnNumber = parsePositiveInt(
-                    matcher.group(3),
-                    1
-            );
-            String message = matcher.group(4).trim();
-
-            diagnostics.add(new CheckDiagnostic(
-                    severity,
-                    message.isBlank()
-                            ? "Felidae diagnostic"
-                            : message,
-                    lineNumber,
-                    columnNumber
-            ));
-        }
+    /** The {@code --check-json} schema (session.CheckReport.java): {version, path, diagnostics[], symbols[]}. */
+    private record CheckJson(List<JsonDiagnostic> diagnostics) {
     }
 
+    private record JsonDiagnostic(String code, String severity, String message, Position start, Position end) {
+    }
+
+    private record Position(int line, int column) {
+    }
+
+    // felidae --check-json prints exactly one line of JSON; a real parser (Gson, already a dependency for the
+    // same reason - see build.gradle.kts) reads it, rather than a regex that cannot see past the nested
+    // start/end objects every diagnostic now has.
     private static void parseJsonDiagnostics(
             @NotNull String output,
             @NotNull List<CheckDiagnostic> diagnostics
     ) {
-        Matcher matcher = JSON_DIAGNOSTIC.matcher(output);
-
-        while (matcher.find()) {
-            String severity = matcher.group(1);
-            int lineNumber = parsePositiveInt(
-                    matcher.group(2),
-                    1
-            );
-            int columnNumber = parsePositiveInt(
-                    matcher.group(3),
-                    1
-            );
-            String message = unescapeJsonString(
-                    matcher.group(4)
-            ).trim();
-
-            diagnostics.add(new CheckDiagnostic(
-                    severity,
-                    message.isBlank()
-                            ? "Felidae AST diagnostic"
-                            : message,
-                    lineNumber,
-                    columnNumber
-            ));
+        String candidate = output.strip();
+        if (!candidate.startsWith("{")) {
+            candidate = output.lines().map(String::strip).filter(line -> line.startsWith("{")).findFirst().orElse(null);
         }
-    }
-
-    private static @NotNull String unescapeJsonString(
-            @NotNull String text
-    ) {
-        StringBuilder result = new StringBuilder();
-
-        for (int index = 0; index < text.length(); index++) {
-            char current = text.charAt(index);
-
-            if (current != '\\' || index + 1 >= text.length()) {
-                result.append(current);
+        if (candidate == null) {
+            return;
+        }
+        final CheckJson parsed;
+        try {
+            parsed = GSON.fromJson(candidate, CheckJson.class);
+        } catch (JsonSyntaxException exception) {
+            return;
+        }
+        if (parsed == null || parsed.diagnostics() == null) {
+            return;
+        }
+        for (JsonDiagnostic diagnostic : parsed.diagnostics()) {
+            if (diagnostic == null || diagnostic.start() == null) {
                 continue;
             }
-
-            char escaped = text.charAt(++index);
-
-            switch (escaped) {
-                case 'n' -> result.append('\n');
-                case 'r' -> result.append('\r');
-                case 't' -> result.append('\t');
-                case 'b' -> result.append('\b');
-                case 'f' -> result.append('\f');
-                case '"', '\\', '/' -> result.append(escaped);
-                default -> result.append(escaped);
-            }
+            final Position end = diagnostic.end() != null ? diagnostic.end() : diagnostic.start();
+            final String message = diagnostic.message() == null || diagnostic.message().isBlank()
+                    ? "Felidae AST diagnostic" : diagnostic.message();
+            diagnostics.add(new CheckDiagnostic(
+                    diagnostic.severity(),
+                    message,
+                    diagnostic.start().line(),
+                    diagnostic.start().column(),
+                    end.line(),
+                    end.column()
+            ));
         }
-
-        return result.toString();
     }
 
     private static CheckDiagnostic parseRuntimeError(
@@ -536,60 +474,60 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
         }
     }
 
+    /**
+     * The range {@code --check-json}'s {@code start}/{@code end} describe, when they differ (most of the warnings
+     * - an unused binding, a boxed number that could be primitive - carry a real span over the name); a single
+     * character, or the closest preceding one at the end of a line, when they are the same point (most syntax and
+     * analysis errors, which name one position, not a range).
+     */
     private static TextRange rangeFor(
             @NotNull String text,
-            int oneBasedLine,
-            int oneBasedColumn
+            int startLine,
+            int startColumn,
+            int endLine,
+            int endColumn
     ) {
         if (text.isEmpty()) {
             return TextRange.EMPTY_RANGE;
         }
+        int start = offsetFor(text, startLine, startColumn);
+        int end = offsetFor(text, endLine, endColumn);
+        if (end > start) {
+            return TextRange.create(start, end);
+        }
+        int rowStart = lineStart(text, startLine);
+        int rowEnd = findLineEnd(text, rowStart);
+        if (start < rowEnd) {
+            return TextRange.create(start, start + 1);
+        }
+        if (rowEnd > rowStart) {
+            return TextRange.create(rowEnd - 1, rowEnd);
+        }
+        return TextRange.create(rowStart, rowStart);
+    }
 
+    // The offset of the start of a one-based line, found by counting line breaks; the length of the document
+    // when the requested line is past its end.
+    private static int lineStart(@NotNull String text, int oneBasedLine) {
         int targetLine = Math.max(1, oneBasedLine);
-        int targetColumn = Math.max(1, oneBasedColumn);
-
         int currentLine = 1;
         int lineStart = 0;
-
-        for (
-                int index = 0;
-                index < text.length() && currentLine < targetLine;
-                index++
-        ) {
-            char current = text.charAt(index);
-
-            if (current == '\n') {
+        for (int index = 0; index < text.length() && currentLine < targetLine; index++) {
+            if (text.charAt(index) == '\n') {
                 currentLine++;
                 lineStart = index + 1;
             }
         }
+        return lineStart;
+    }
 
-        int lineEnd = findLineEnd(text, lineStart);
-
-        /*
-         * The debugger reports one-based columns. Clamp the requested
-         * position to the actual line so a bad diagnostic cannot create
-         * an invalid TextRange.
-         */
-        int requestedOffset = lineStart + targetColumn - 1;
-        int offset = Math.max(
-                lineStart,
-                Math.min(requestedOffset, lineEnd)
-        );
-
-        /*
-         * Highlight one character when possible. For an error positioned
-         * at the end of a line, highlight the closest preceding character.
-         */
-        if (offset < lineEnd) {
-            return TextRange.create(offset, offset + 1);
-        }
-
-        if (lineEnd > lineStart) {
-            return TextRange.create(lineEnd - 1, lineEnd);
-        }
-
-        return TextRange.create(lineStart, lineStart);
+    // A one-based (line, column) clamped to the actual line, so a bad diagnostic cannot create an invalid
+    // TextRange.
+    private static int offsetFor(@NotNull String text, int oneBasedLine, int oneBasedColumn) {
+        int start = lineStart(text, oneBasedLine);
+        int end = findLineEnd(text, start);
+        int requested = start + Math.max(1, oneBasedColumn) - 1;
+        return Math.max(start, Math.min(requested, end));
     }
 
     private static int findLineEnd(
@@ -661,7 +599,9 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
             @NotNull String severity,
             @NotNull String message,
             int line,
-            int column
+            int column,
+            int endLine,
+            int endColumn
     ) {
         public CheckDiagnostic {
             severity = severity.isBlank()
@@ -674,6 +614,13 @@ public final class FelidaeExternalAnnotator extends ExternalAnnotator<
 
             line = Math.max(1, line);
             column = Math.max(1, column);
+            endLine = Math.max(line, endLine);
+            endColumn = endLine == line ? Math.max(column, endColumn) : Math.max(1, endColumn);
+        }
+
+        /** A point diagnostic (a runtime error, a plugin-side warning): its end is the same position as its start. */
+        public CheckDiagnostic(@NotNull String severity, @NotNull String message, int line, int column) {
+            this(severity, message, line, column, line, column);
         }
     }
 

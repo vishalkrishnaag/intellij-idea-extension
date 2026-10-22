@@ -14,11 +14,11 @@ public final class FelidaeRunConfigurationOptions
                             "sourceFile"
                     );
 
-    private final StoredProperty<String> interpreterPath =
+    private final StoredProperty<String> compilerPath =
             string("")
                     .provideDelegate(
                             this,
-                            "interpreterPath"
+                            "compilerPath"
                     );
 
     private final StoredProperty<String> programArguments =
@@ -43,12 +43,12 @@ public final class FelidaeRunConfigurationOptions
         sourceFile.setValue(this, value);
     }
 
-    public @NotNull String getInterpreterPath() {
-        return interpreterPath.getValue(this);
+    public @NotNull String getCompilerPath() {
+        return compilerPath.getValue(this);
     }
 
-    public void setInterpreterPath(@NotNull String value) {
-        interpreterPath.setValue(this, value);
+    public void setCompilerPath(@NotNull String value) {
+        compilerPath.setValue(this, value);
     }
 
     public @NotNull String getProgramArguments() {
