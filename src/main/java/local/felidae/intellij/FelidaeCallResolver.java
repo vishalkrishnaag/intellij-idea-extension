@@ -39,7 +39,7 @@ public final class FelidaeCallResolver {
      * {@code def}, so calls are not mistaken for declarations.
      */
     private static final Pattern DECLARATION = Pattern.compile(
-            "(?m)^[ \\t]*(?:def|define)[ \\t]+([A-Za-z_][A-Za-z0-9_:.]*)(?:<[^<>(]*(?:<[^<>]*>[^<>(]*)*>)?"
+            "(?m)^[ \\t]*(?:async[ \\t]+)?(?:def|define)[ \\t]+([A-Za-z_][A-Za-z0-9_:.]*)(?:<[^<>(]*(?:<[^<>]*>[^<>(]*)*>)?"
                     + "[ \\t]*\\(((?:[^()]|\\((?:[^()]|\\([^()]*\\))*\\))*)\\)(?:[ \\t]*:[ \\t]*[A-Za-z_][\\w.<>, ]*)?[ \\t]*(=>)");
 
     /** Leading `name:` of one argument segment; `(?!=)` keeps `:=` out. */
@@ -73,7 +73,7 @@ public final class FelidaeCallResolver {
             qualified.append(Pattern.quote(parts[i]));
         }
         return Pattern.compile(
-                "(?m)^[ \\t]*(?:(?:def|define)[ \\t]+" + qualified + "[ \\t]*\\("
+                "(?m)^[ \\t]*(?:(?:async[ \\t]+)?(?:def|define)[ \\t]+" + qualified + "[ \\t]*\\("
                         + "|(?:static[ \\t]+)?(?:class|interface)[ \\t]+" + qualified + "\\b)");
     }
 

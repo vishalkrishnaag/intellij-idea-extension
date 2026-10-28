@@ -95,7 +95,7 @@ public final class FelidaeGotoDeclarationHandler implements GotoDeclarationHandl
     private static final Set<String> KEYWORDS = Set.of(
             "def", "define", "import", "package", "class", "interface", "implements", "static", "private", "extends", "index", "key", "then", "else",
             "end", "for", "in", "while", "switch", "case", "default", "break", "continue", "try",
-            "catch", "new", "this", "super", "and", "or", "not", "true", "false", "nil");
+            "catch", "new", "this", "super", "and", "or", "not", "true", "false", "nil", "async", "await");
 
     private static @Nullable String resolveName(@NotNull CharSequence text, int offset) {
         int start = Math.max(0, Math.min(offset, text.length()));

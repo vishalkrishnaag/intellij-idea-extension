@@ -138,7 +138,7 @@ public final class FelidaeFormatter {
             Pattern.compile("(?:else\\b(?:.*\\bthen)?|catch\\b.*\\bthen|case\\b.*\\bthen|default\\s+then)\\s*");
     private static final List<Pattern> OPENS_BLOCK = List.of(
             Pattern.compile("\\s*(?:private\\s+)?(?:static\\s+)?(?:class|interface)\\s+[A-Za-z_][A-Za-z0-9_.]*(?:\\s+extends?\\b.*)?\\s*"),
-            Pattern.compile("\\s*(?:def|define)\\s+[A-Za-z_][A-Za-z0-9_.]*(?:<[^>]*>)?\\s*\\([^)]*\\)(?:\\s*:\\s*[^=]+?)?\\s*=>\\s*"),
+            Pattern.compile("\\s*(?:async\\s+)?(?:def|define)\\s+[A-Za-z_][A-Za-z0-9_.]*(?:<[^>]*>)?\\s*\\([^)]*\\)(?:\\s*:\\s*[^=]+?)?\\s*=>\\s*"),
             Pattern.compile("\\s*(?:for\\b.*\\bthen|while\\b.*\\bthen|switch\\b.*|try)\\s*"),
             Pattern.compile("\\s*(?!(?:else|catch|case|default)\\b)\\S.*\\bthen\\s*"));
 

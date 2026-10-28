@@ -342,6 +342,8 @@ public final class FelidaeSyntaxHighlighter
                 "class",
                 "static",
                 "abstract",
+                "async",
+                "await",
                 "private",
                 "extends",
                 "implements",
